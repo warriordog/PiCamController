@@ -3,9 +3,6 @@
     <output-path>$PROJECT_DIR$/out/artifacts/</output-path>
     <root id="archive" name="PiCamController.jar">
       <element id="module-output" name="PiCamController" />
-      <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/res/META-INF/MANIFEST.MF" />
-      </element>
     </root>
   </artifact>
 </component>
