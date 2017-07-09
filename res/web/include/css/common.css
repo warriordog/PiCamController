@@ -1,4 +1,45 @@
-.testimage {
-    width: 100%;
-    height: 100%;
+h1 {
+    font-size: 150%;
+    font-weight: normal;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid_main {
+    display: flex;
+
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+
+    /* Debugging */
+    /*border: 1px solid red;*/
+}
+
+.grid_row, .warning_message {
+    display: inline-flex;
+
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 0;
+    margin-right: 0;
+
+    /* Debugging */
+    /*border: 1px solid green;*/
+}
+
+.warning_message {
+    font-size: 100%;
+    color: red;
+    font-weight: bold;
+
+    border: 1px solid red;
 }

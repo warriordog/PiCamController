@@ -28,6 +28,7 @@ public class WebServer {
             sendResponse("200 OK", 200, e);
             controller.shutdown();
         });
+        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.0.0", 200, e));
     }
 
     public void start() {
