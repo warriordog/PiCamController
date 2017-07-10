@@ -52,7 +52,7 @@ public class WebServer {
                             // workaround for bug where a string that ends with a delimiter is not properly split
                             String[] settings = parts.length == 3 ? parts[2].split(" ") : new String[0];
 
-                            controller.getCamera(0).getSettings().addSettingPairs(settings);
+                            controller.getCamera(0).getVidSettings().addSettingPairs(settings);
                             controller.getCamera(0).recordFor(time, new H264File(controller.getVidDir(), fileName));
 
                             sendResponse("200 OK", 200, e);

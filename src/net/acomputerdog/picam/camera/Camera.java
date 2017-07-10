@@ -15,8 +15,8 @@ public class Camera {
     private final PiCamController controller;
     private final int cameraNumber;
 
-    //TODO separate settings for picture and video
-    private CameraSettings settings;
+    private VidSettings vidSettings;
+    private PicSettings picSettings;
 
     private boolean recording = false;
     private long recordStart = 0;
@@ -31,7 +31,8 @@ public class Camera {
     public Camera(PiCamController controller, int cameraNumber) {
         this.controller = controller;
         this.cameraNumber = cameraNumber;
-        this.settings = new CameraSettings();
+        this.vidSettings = new VidSettings();
+        this.picSettings = new PicSettings();
     }
 
     public int getCameraNumber() {
@@ -59,7 +60,7 @@ public class Camera {
             command.add("-t");
             command.add(String.valueOf(time));
             command.add("-n");
-            settings.buildVideoCommandLine(command);
+            vidSettings.buildCommandLine(command);
 
             printList(command);
 
@@ -131,8 +132,12 @@ public class Camera {
         return recordFile == null ? "N/A" : recordFile.getFile().getAbsolutePath();
     }
 
-    public CameraSettings getSettings() {
-        return settings;
+    public VidSettings getVidSettings() {
+        return vidSettings;
+    }
+
+    public PicSettings getPicSettings() {
+        return picSettings;
     }
 
     public void takeSnapshot(JPGFile file) throws IOException {
@@ -147,7 +152,7 @@ public class Camera {
         command.add("-n");
 
         //TODO settings
-        settings.buildPictureCommandLine(command);
+        picSettings.buildCommandLine(command);
 
         printList(command);
 
