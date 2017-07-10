@@ -62,10 +62,9 @@ public class Camera {
             command.add("-n");
             vidSettings.buildCommandLine(command);
 
-            printList(command);
+            //printList(command);
 
             processBuilder.command(command);
-             //processBuilder.command("raspivid", "-o", "-", "-w", "1920", "-h", "1080", "-md", "1", "-b", "0", "-t", String.valueOf(time), "-fps", "30", "-g", "150", "-ex", "antishake", "-awb", "fluorescent", "-drc", "med", "-qp", "0", "-n", "-ih", "-lev", "high", "-fl");
             processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
@@ -151,10 +150,9 @@ public class Camera {
         command.add("1");
         command.add("-n");
 
-        //TODO settings
         picSettings.buildCommandLine(command);
 
-        printList(command);
+        //printList(command);
 
         processBuilder.command(command);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);

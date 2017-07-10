@@ -33,6 +33,8 @@ function updateLoop() {
     var timeDiv = document.getElementById("recording_time");
     var recordButton = document.getElementById("record_button");
 
+    var showSnapDiv = document.getElementById("show_snapshot_div");
+
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
         if (req.readyState == 4) {
@@ -46,10 +48,12 @@ function updateLoop() {
                         statusDiv.innerHTML = "<div style=\"color: red\">recording</div>";
                         pathDiv.innerHTML = respArray[1];
                         timeDiv.innerHTML = (respArray[2] / 1000) + "s";
-                        progressDiv.style.display = "inline-flex";
+                        progressDiv.style.display = "flex";
                     } else {
                         if (recordButton.value === "Stop") {
-                            recordButton.value = "Record";
+                            recordButton.value = "Video";
+
+                            showSnapDiv.style.display = "flex";
                         }
 
                         statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";

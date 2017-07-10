@@ -15,20 +15,27 @@
     </head>
     <body>
         <script type="text/javascript">
-            function showStart() {
-                var buttonText = document.getElementById("record_button").value;
-                if (buttonText === "Record") {
-                    document.getElementById("record_button").value = "Cancel";
-                    document.getElementById("start_settings_div").style.display = "flex";
-                    document.getElementById("start_button_div").style.display = "flex";
-                    document.getElementById("invalid_time_div").style.display = "none";
-                } else if (buttonText === "Cancel") {
-                    document.getElementById("record_button").value = "Record";
-                    document.getElementById("start_settings_div").style.display = "none";
-                    document.getElementById("start_button_div").style.display = "none";
-                } else { //stop
-                    document.getElementById("record_button").value = "Record";
+            function cancelRecord() {
+                document.getElementById("record_button").value = "Video";
+                document.getElementById("start_settings_div").style.display = "none";
+            }
 
+            function cancelSnap() {
+                document.getElementById("show_snapshot_button").value = "Picture";
+                document.getElementById("snapshot_div").style.display = "none";
+            }
+
+            function showStart() {
+                var recButton = document.getElementById("record_button");
+                if (recButton.value === "Video") {
+                    recButton.value = "Cancel";
+                    document.getElementById("start_settings_div").style.display = "flex";
+                    document.getElementById("invalid_time_div").style.display = "none";
+
+                    cancelSnap();
+                } else if (recButton.value === "Cancel") {
+                    cancelRecord()
+                } else { //stop
                     stopRecording();
                 }
             }
@@ -41,11 +48,15 @@
                 if (isNaN(time)) {
                     document.getElementById("invalid_time_div").style.display = "flex";
                 } else {
-                    document.getElementById("record_button").value = "Record";
+                    document.getElementById("record_button").value = "Video";
                     document.getElementById("start_settings_div").style.display = "none";
-                    document.getElementById("start_button_div").style.display = "none";
+                    //document.getElementById("start_button_div").style.display = "none";
                     document.getElementById("invalid_time_div").style.display = "none";
                     document.getElementById("record_button").value = "Stop";
+
+
+                    document.getElementById("show_snapshot_div").style.display = "none";
+                    document.getElementById("snapshot_div").style.display = "none";
 
                     startRecording(time, path, settings);
                 }
@@ -53,6 +64,18 @@
 
             function snapshot() {
                 takeSnapshot(document.getElementById("snapshot_name").value);
+            }
+
+            function showSnapshot() {
+                var snapButton = document.getElementById("show_snapshot_button");
+                if (snapButton.value === "Picture") {
+                    snapButton.value = "Cancel";
+                    document.getElementById("snapshot_div").style.display = "flex";
+
+                    cancelRecord();
+                } else {
+                    cancelSnap();
+                }
             }
         </script>
 
@@ -75,13 +98,16 @@
             </div>
             <div class="grid_row">
                 <div class="grid_item">
-                    <input type="button" id="record_button" value="Record" onclick="showStart()">
+                    <input type="button" id="record_button" value="Video" onclick="showStart()">
                 </div>
-                <div class="grid_item" id="start_button_div" style="display: none">
-                    <input type="button" value="Start" onclick="startNow()">
+                <div class="grid_item" id="show_snapshot_div">
+                    <input type="button" id="show_snapshot_button" value="Picture" onclick="showSnapshot()">
                 </div>
             </div>
             <div class="inner_grid_main" id="start_settings_div" style="display: none; justify-content: flex-start">
+                <div class="inner_grid_row">
+                    <input type="button" value="Start" onclick="startNow()">
+                </div>
                 <div class="inner_grid_row" style="align-items: baseline">
                     <p class="setting_label">
                         Record for:
@@ -121,7 +147,7 @@
                     N/A
                 </div>
             </div>
-            <div class="grid_row">
+            <div class="grid_row" id="snapshot_div" style="display: none">
                 <div class="grid_item">
                     <input type="button" value="Take snapshot" onclick="snapshot()">
                 </div>
