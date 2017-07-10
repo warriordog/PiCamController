@@ -21,9 +21,9 @@ public class WebServer {
         this.server = HttpServer.create(new InetSocketAddress(8080), 0);
 
         server.createContext("/", e -> redirect("/html/main.html", e));
-        server.createContext("/html/", this::sendFile);
-        server.createContext("/img/", this::sendFile);
-        server.createContext("/include/", this::sendFile);
+        server.createContext("/html/", this::sendWebFile);
+        server.createContext("/img/", this::sendWebFile);
+        server.createContext("/include/", this::sendWebFile);
         server.createContext("/func/", e -> sendResponse("404 Unknown function", 404, e));
         server.createContext("/func/exit", e -> {
             sendResponse("200 OK", 200, e);
@@ -86,6 +86,51 @@ public class WebServer {
                 sendResponse("405 Method Not Allowed: use POST", 405, e);
             }
         });
+        server.createContext("/func/download", e -> {
+            if ("GET".equals(e.getRequestMethod())) {
+                String request = e.getRequestURI().getQuery();
+                int eIdx = request.indexOf('=');
+                if (eIdx > -1 && request.length() - eIdx > 1) {
+                    String resourceType = request.substring(0, eIdx);
+                    String resourcePath = request.substring(eIdx + 1);
+                    if (!resourcePath.contains("/") && !resourcePath.contains("\\")) {
+                        File dir = null;
+
+                        if ("v".equals(resourceType)) {
+                            dir = controller.getVidDir();
+                        } else if ("p".equals(resourceType)) {
+                            dir = controller.getPicDir();
+                        } else {
+                            sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                        }
+
+                        if (dir != null) {
+                            File file = new File(dir, resourcePath);
+                            if (file.isFile()) {
+                                try {
+                                    InputStream in = new FileInputStream(file);
+                                    e.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"" + resourcePath + "\"");
+                                    sendFile(e, in);
+                                } catch (FileNotFoundException ex) {
+                                    sendResponse("404 Not Found: Filesystem error", 404, e);
+                                } catch (IOException ex) {
+                                    System.err.println("IO error while sending file");
+                                    ex.printStackTrace();
+                                }
+                            } else {
+                                sendResponse("404 Not Found: No file could be found by that name", 404, e);
+                            }
+                        }
+                    } else {
+                        sendResponse("400 Malformed Input: resource path is invalid", 400, e);
+                    }
+                } else {
+                    sendResponse("400 Malformed Input: resource type not specified", 400, e);
+                }
+            } else {
+                sendResponse("405 Method Not Allowed: use GET", 405, e);
+            }
+        });
     }
 
     public void start() {
@@ -97,26 +142,30 @@ public class WebServer {
         sendResponse("308 Permanent Redirect", 308, exchange);
     }
 
-    private void sendFile(HttpExchange exchange) throws IOException {
+    private void sendWebFile(HttpExchange exchange) throws IOException {
         String fullPath = "/web" + exchange.getRequestURI().getPath().replace("..", "");
         InputStream in = getClass().getResourceAsStream(fullPath);
 
         if (in == null) {
             sendResponse("404 not found", 404, exchange);
         } else {
-            exchange.sendResponseHeaders(200, 0);
-            byte[] buff = new byte[64];
-
-            // autocloses out
-            try (OutputStream out = exchange.getResponseBody();) {
-
-                while (in.available() > 0) {
-                    int count = in.read(buff);
-                    out.write(buff, 0, count);
-                }
-            }
-            exchange.close();
+            sendFile(exchange, in);
         }
+    }
+
+    private void sendFile(HttpExchange exchange, InputStream in) throws IOException {
+        exchange.sendResponseHeaders(200, 0);
+        byte[] buff = new byte[64];
+
+        // autocloses out
+        try (OutputStream out = exchange.getResponseBody();) {
+
+            while (in.available() > 0) {
+                int count = in.read(buff);
+                out.write(buff, 0, count);
+            }
+        }
+        exchange.close();
     }
 
     private void sendResponse(String response, int code, HttpExchange exchange) throws IOException {
