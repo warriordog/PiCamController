@@ -72,18 +72,20 @@ public class CameraSettings {
     public void addSettingPairs(String[] pairs) {
         for (String pair : pairs) {
             int split = pair.indexOf('=');
+            String key;
+            String val;
             if (split > -1 && pair.length() - split > 1) {
-                String key = pair.substring(0, split);
-                String val = pair.substring(split + 1);
-
-                Setting setting = list.getSetting(key);
-                if (setting != null) {
-                    setting.setValue(val);
-                } else {
-                    System.out.println("Ignoring unknown setting pair: " + pair);
-                }
+                key = pair.substring(0, split);
+                val = pair.substring(split + 1);
             } else {
-                System.out.println("Ignoring invalid setting pair: " + pair);
+                key = pair;
+                val = null;
+            }
+            Setting setting = list.getSetting(key);
+            if (setting != null) {
+                setting.setValue(val);
+            } else {
+                System.out.println("Ignoring unknown setting pair: " + pair);
             }
         }
     }

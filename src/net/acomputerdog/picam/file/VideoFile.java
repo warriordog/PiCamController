@@ -14,7 +14,7 @@ public class VideoFile {
         while (f.exists()) {
             offset++;
             //f = new File(String.format("%s.%3d.h264", name, offset));
-            f = new File(name + "." + offset + ".h264");
+            f = new File(dir, name + "." + offset + ".h264");
         }
 
         this.file = f;
