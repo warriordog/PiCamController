@@ -1,5 +1,7 @@
 package net.acomputerdog.picam;
 
+import java.io.IOException;
+
 public class Camera {
     private final PiCamController controller;
     private final int cameraNumber;
@@ -21,6 +23,21 @@ public class Camera {
 
     public void recordFor(int time) {
         recording = true;
-        //TODO run command
+
+        try {
+            Runtime.getRuntime().exec("xterm");
+            //TODO run real command
+        } catch (IOException e) {
+            throw new RuntimeException("Exception running record command", e);
+        }
+    }
+
+    public void stop() {
+        try {
+            Runtime.getRuntime().exec(new String[]{"killall", "xterm"});
+            recording = false;
+        } catch (IOException e) {
+            throw new RuntimeException("Exception stopping recording", e);
+        }
     }
 }

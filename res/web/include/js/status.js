@@ -38,7 +38,11 @@ function updateLoop() {
 
                 if (respArray.length == 1) {
                     // record status
-                    statusDiv.innerHTML = respArray[0];
+                    if (respArray[0] === "1") {
+                        statusDiv.innerHTML = "<div style=\"color: red\">recording</div>";
+                    } else {
+                        statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";
+                    }
                 } else {
                     console.debug("server returned invalid status array: wrong length");
                 }

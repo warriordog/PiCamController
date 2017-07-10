@@ -28,7 +28,7 @@ public class WebServer {
             controller.shutdown();
         });
         server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.0.0", 200, e));
-        server.createContext("/func/status", e -> sendResponse(controller.buildStatusLine(), 200, e));
+        server.createContext("/func/status", e -> sendResponse(controller.getStatusString(), 200, e));
         server.createContext("/func/record", e -> {
             if ("POST".equals(e.getRequestMethod())) {
                 String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
@@ -48,6 +48,11 @@ public class WebServer {
             } else {
                 sendResponse("405 Method Not Allowed: use POST", 405, e);
             }
+        });
+        server.createContext("/func/record_stop", e -> {
+            sendResponse(controller.getStatusString(), 200, e);
+
+            controller.stopRecording();
         });
     }
 

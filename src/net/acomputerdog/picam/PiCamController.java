@@ -26,12 +26,16 @@ public class PiCamController {
         System.exit(0);
     }
 
-    public String buildStatusLine() {
-        return camera.isRecording() ? "<div style=\"color: red\">recording</div>" : "<div style=\"color: green\">idle</div>";
+    public String getStatusString() {
+        return camera.isRecording() ? "1" : "0";
     }
 
     public void recordFor(int time) {
         camera.recordFor(time);
+    }
+
+    public void stopRecording() {
+        camera.stop();
     }
 
     public static void main(String[] args) {

@@ -10,13 +10,18 @@
     <body>
         <script type="text/javascript">
             function showStart() {
-                if (document.getElementById("record_button").value == "Record") {
+                var buttonText = document.getElementById("record_button").value;
+                if (buttonText === "Record") {
                     document.getElementById("record_button").value = "Cancel";
                     document.getElementById("start_settings_div").style.display = "inline-block";
                     document.getElementById("invalid_time_div").style.display = "none";
-                } else {
+                } else if (buttonText === "Cancel") {
                     document.getElementById("record_button").value = "Record";
                     document.getElementById("start_settings_div").style.display = "none";
+                } else {
+                    document.getElementById("record_button").value = "Record";
+
+                    stopRecording();
                 }
             }
 
@@ -27,8 +32,8 @@
                 } else {
                     document.getElementById("record_button").value = "Record";
                     document.getElementById("start_settings_div").style.display = "none";
-                    document.getElementById("record_start_div").style.display = "none";
                     document.getElementById("invalid_time_div").style.display = "none";
+                    document.getElementById("record_button").value = "Stop";
 
                     startRecording(time);
                 }
@@ -52,7 +57,7 @@
                     </div>
                 </div>
             </div>
-            <div class="grid_row" id="record_start_div">
+            <div class="grid_row">
                 <div class="grid_item">
                     <input type="button" id="record_button" value="Record" onclick="showStart()">
                 </div>
