@@ -28,6 +28,10 @@ var updateLoopTimer;
 // update status
 function updateLoop() {
     var statusDiv = document.getElementById("cam_status");
+    var progressDiv = document.getElementById("rec_progress_div");
+    var pathDiv = document.getElementById("recording_path");
+    var timeDiv = document.getElementById("recording_time");
+    var recordButton = document.getElementById("record_button");
 
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
@@ -36,12 +40,17 @@ function updateLoop() {
                 var respLine = req.responseText;
                 var respArray = respLine.split("|");
 
-                if (respArray.length == 1) {
+                if (respArray.length == 3) {
                     // record status
                     if (respArray[0] === "1") {
                         statusDiv.innerHTML = "<div style=\"color: red\">recording</div>";
+                        pathDiv.innerHTML = respArray[1];
+                        timeDiv.innerHTML = (respArray[2] / 1000) + "s";
+                        progressDiv.style.display = "inline-flex";
                     } else {
+                        recordButton.value = "Record";
                         statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";
+                        progressDiv.style.display = "none";
                     }
                 } else {
                     console.debug("server returned invalid status array: wrong length");

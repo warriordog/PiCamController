@@ -43,7 +43,7 @@ public class Camera {
             this.recordFile = videoFile;
 
             ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command("raspivid", "-o", "-", "-w", "1920", "-h", "1080", "-md", "1", "-b", "0", "-t", String.valueOf(time), "-fps", "30", "-g", "150", "-ex", "antishake", "-awb", "fluorescent", "-drc", "med", "-qp", "0", "-n");
+            processBuilder.command("raspivid", "-o", "-", "-w", "1920", "-h", "1080", "-md", "1", "-b", "0", "-t", String.valueOf(time), "-fps", "30", "-g", "150", "-ex", "antishake", "-awb", "fluorescent", "-drc", "med", "-qp", "0", "-n", "-ih", "-lev", "high", "-fl");
             processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
@@ -103,6 +103,10 @@ public class Camera {
 
     public long getRecordingTime() {
         return System.currentTimeMillis() - recordStart;
+    }
+
+    public String getRecordingPath() {
+        return recordFile == null ? "N/A" : recordFile.getFile().getAbsolutePath();
     }
 
     private static void flushBuffers(InputStream in, OutputStream out) throws IOException {

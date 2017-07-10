@@ -29,7 +29,14 @@ public class WebServer {
             controller.shutdown();
         });
         server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.0.1", 200, e));
-        server.createContext("/func/status", e -> sendResponse(controller.getCamera(0).isRecording() ? "1" : "0", 200, e));
+        server.createContext("/func/status", e -> {
+            String resp = controller.getCamera(0).isRecording() ? "1" : "0";
+            resp += "|";
+            resp += controller.getCamera(0).getRecordingPath();
+            resp += "|";
+            resp += controller.getCamera(0).getRecordingTime();
+            sendResponse(resp, 200, e);
+        });
         server.createContext("/func/record", e -> {
             if ("POST".equals(e.getRequestMethod())) {
                 if (!controller.getCamera(0).isRecording()) {
@@ -40,7 +47,6 @@ public class WebServer {
                             int time = Integer.parseInt(parts[0]);
                             String fileName = parts[1].replace('.', '_').replace('/', '_').replace('~', '_');
 
-                            System.out.println("Creating video file: " + fileName);
                             controller.getCamera(0).recordFor(time, new VideoFile(controller.getVidDir(), fileName));
 
                             sendResponse("200 OK", 200, e);

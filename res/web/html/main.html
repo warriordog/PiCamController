@@ -73,6 +73,21 @@
                 or enter 0 to record until canceled.<br>
                 <input type="button" value="Close" onclick="document.getElementById('invalid_time_div').style.display = 'none'">
             </div>
+            <div class="grid_row" id="rec_progress_div" style="display: none">
+                <div class="grid_item">
+                    Recording to:
+                </div>
+                <div class="grid_item" id="recording_path">
+                    N/A
+                </div>
+                <br>
+                <div class="grid_item">
+                    Time:
+                </div>
+                <div class="grid_item" id="recording_time">
+                    N/A
+                </div>
+            </div>
         </div>
 
         <script src="/include/js/common.js"></script>
