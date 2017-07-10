@@ -1,7 +1,8 @@
 package net.acomputerdog.picam.camera;
 
 import net.acomputerdog.picam.PiCamController;
-import net.acomputerdog.picam.file.VideoFile;
+import net.acomputerdog.picam.file.H264File;
+import net.acomputerdog.picam.file.JPGFile;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -13,13 +14,15 @@ import java.util.List;
 public class Camera {
     private final PiCamController controller;
     private final int cameraNumber;
+
+    //TODO separate settings for picture and video
     private CameraSettings settings;
 
     private boolean recording = false;
     private long recordStart = 0;
 
-    private VideoFile recordFile;
-    private Thread recordThread;
+    private H264File recordFile;
+    private Thread copyThread;
     private Process recordProcess;
 
     private InputStream recordIn;
@@ -39,7 +42,7 @@ public class Camera {
         return recording && recordProcess != null && recordProcess.isAlive();
     }
 
-    public void recordFor(int time, VideoFile videoFile) {
+    public void recordFor(int time, H264File videoFile) {
         if (recording) {
             System.out.println("Already recording");
         } else {
@@ -56,7 +59,7 @@ public class Camera {
             command.add("-t");
             command.add(String.valueOf(time));
             command.add("-n");
-            settings.buildCommandLine(command);
+            settings.buildVideoCommandLine(command);
 
             printList(command);
 
@@ -65,7 +68,7 @@ public class Camera {
             processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
-            recordThread = new Thread(() -> {
+            copyThread = new Thread(() -> {
                 try {
                     byte[] buff = new byte[512];
                     while (recording) {
@@ -90,13 +93,14 @@ public class Camera {
                 } catch (IOException e) {
                     System.err.println("IO error while recording");
                     e.printStackTrace();
+                    stop();
+                } finally {
                     close(recordIn);
                     close(recordOut);
-                    stop();
                 }
             });
-            recordThread.setName("record_thread");
-            recordThread.setDaemon(false);
+            copyThread.setName("record_thread");
+            copyThread.setDaemon(false);
 
 
             try {
@@ -105,7 +109,7 @@ public class Camera {
                 recordOut = recordFile.getOutStream();
                 recordIn = recordProcess.getInputStream();
 
-                recordThread.start();
+                copyThread.start();
             } catch (IOException e) {
                 close(recordOut);
                 close(recordIn);
@@ -129,6 +133,60 @@ public class Camera {
 
     public CameraSettings getSettings() {
         return settings;
+    }
+
+    public void takeSnapshot(JPGFile file) throws IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+
+        List<String> command = new ArrayList<>();
+        command.add("raspistill");
+        command.add("-o");
+        command.add("-");
+        command.add("-t");
+        command.add("1");
+        command.add("-n");
+
+        //TODO settings
+        settings.buildPictureCommandLine(command);
+
+        printList(command);
+
+        processBuilder.command(command);
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+        Process proc = processBuilder.start();
+        OutputStream out = file.getOutStream();
+        InputStream in = proc.getInputStream();
+
+        copyThread = new Thread(() -> {
+            try {
+                byte[] buff = new byte[512];
+                while (proc.isAlive()) {
+                    // copy some of the file
+                    int count = in.read(buff);
+
+                    if (count == -1) {
+                        // end of file
+                        break;
+                    }
+
+                    out.write(buff, 0, count);
+                }
+                System.out.print("Flushing buffers...");
+                flushBuffers(in, out);
+                System.out.println("done.");
+            } catch (IOException e) {
+                System.err.println("IO error while taking snapshot");
+                e.printStackTrace();
+            } finally {
+                close(in);
+                close(out);
+            }
+        });
+        copyThread.setName("copy_thread");
+        copyThread.setDaemon(false);
+        copyThread.start();
     }
 
     private static void flushBuffers(InputStream in, OutputStream out) throws IOException {

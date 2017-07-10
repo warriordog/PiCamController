@@ -10,6 +10,7 @@ public class PiCamController {
     private final WebServer webServer;
     private final Camera[] cameras;
     private final File vidDir;
+    private final File picDir;
 
     private PiCamController() {
         try {
@@ -19,6 +20,11 @@ public class PiCamController {
             vidDir = new File("./videos/");
             if (!vidDir.isDirectory() && !vidDir.mkdir()) {
                 System.out.println("Unable to create video directory");
+            }
+
+            picDir = new File("./snapshots/");
+            if (!picDir.isDirectory() && !picDir.mkdir()) {
+                System.out.println("Unable to create snapshot directory");
             }
         } catch (Exception e) {
             throw new RuntimeException("Exception setting up camera", e);
@@ -41,6 +47,10 @@ public class PiCamController {
 
     public File getVidDir() {
         return vidDir;
+    }
+
+    public File getPicDir() {
+        return picDir;
     }
 
     public static void main(String[] args) {

@@ -12,3 +12,10 @@ function stopRecording() {
     req.open("GET", "/func/record_stop", true); // true for asynchronous
     req.send();
 }
+
+// take a snapshot
+function takeSnapshot(name) {
+    var req = new XMLHttpRequest();
+    req.open("POST", "/func/snapshot", true); // true for asynchronous
+    req.send(name);
+}

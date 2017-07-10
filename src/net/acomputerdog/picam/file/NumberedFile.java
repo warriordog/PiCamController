@@ -5,17 +5,21 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-public class VideoFile {
+public class NumberedFile {
     private final File file;
 
-    public VideoFile(File dir, String name) {
-        int offset = 0;
-        File f = new File(dir, name + ".0.h264");
-        while (f.exists()) {
-            offset++;
-            //f = new File(String.format("%s.%3d.h264", name, offset));
-            f = new File(dir, name + "." + offset + ".h264");
+    public NumberedFile(File dir, String name, String ext) {
+        if (!dir.exists() && !dir.mkdir()) {
+            throw new RuntimeException("Unable to create directory");
         }
+
+        int offset = 0;
+
+        File f;
+        do {
+            f = new File(dir, name + "." + offset + "." + ext);
+            offset++;
+        } while (f.exists());
 
         this.file = f;
     }

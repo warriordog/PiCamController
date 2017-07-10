@@ -3,7 +3,8 @@ package net.acomputerdog.picam.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
-import net.acomputerdog.picam.file.VideoFile;
+import net.acomputerdog.picam.file.H264File;
+import net.acomputerdog.picam.file.JPGFile;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -52,7 +53,7 @@ public class WebServer {
                             String[] settings = parts.length == 3 ? parts[2].split(" ") : new String[0];
 
                             controller.getCamera(0).getSettings().addSettingPairs(settings);
-                            controller.getCamera(0).recordFor(time, new VideoFile(controller.getVidDir(), fileName));
+                            controller.getCamera(0).recordFor(time, new H264File(controller.getVidDir(), fileName));
 
                             sendResponse("200 OK", 200, e);
                         } catch (NumberFormatException ex) {
@@ -72,6 +73,18 @@ public class WebServer {
         server.createContext("/func/record_stop", e -> {
             sendResponse("200 OK", 200, e);
             controller.getCamera(0).stop();
+        });
+        server.createContext("/func/snapshot", e -> {
+            if ("POST".equals(e.getRequestMethod())) {
+                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
+                String fileName = request.replace('.', '_').replace('/', '_').replace('~', '_');
+                JPGFile file = new JPGFile(controller.getPicDir(), fileName);
+                controller.getCamera(0).takeSnapshot(file);
+
+                sendResponse("200 OK", 200, e);
+            } else {
+                sendResponse("405 Method Not Allowed: use POST", 405, e);
+            }
         });
     }
 

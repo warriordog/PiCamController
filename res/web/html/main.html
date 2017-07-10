@@ -50,6 +50,10 @@
                     startRecording(time, path, settings);
                 }
             }
+
+            function snapshot() {
+                takeSnapshot(document.getElementById("snapshot_name").value);
+            }
         </script>
 
         <div class="grid_main">
@@ -88,7 +92,7 @@
                     <p class="setting_label">
                         Filename:
                     </p>
-                    <input type="text" id="record_text" value="my_video"> <br>
+                    <input type="text" id="record_text" value="my_video">
                 </div>
                 <div class="inner_grid_row" style="align-items: baseline">
                     <p class="setting_label">
@@ -115,6 +119,14 @@
                 </div>
                 <div class="grid_item" id="recording_time">
                     N/A
+                </div>
+            </div>
+            <div class="grid_row">
+                <div class="grid_item">
+                    <input type="button" value="Take snapshot" onclick="snapshot()">
+                </div>
+                <div class="grid_item">
+                    <input type="text" id="snapshot_name" value="my_picture">
                 </div>
             </div>
         </div>
