@@ -4,10 +4,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.util.stream.Collectors;
 
 public class WebServer {
     private final PiCamController controller;
@@ -29,20 +28,31 @@ public class WebServer {
             controller.shutdown();
         });
         server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.0.0", 200, e));
+        server.createContext("/func/status", e -> sendResponse(controller.buildStatusLine(), 200, e));
+        server.createContext("/func/record", e -> {
+            if ("POST".equals(e.getRequestMethod())) {
+                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
+
+                int idx = request.indexOf('=');
+                if (idx > -1 && request.length() - idx > 1) {
+                    try {
+                        int time = Integer.parseInt(request.substring(idx + 1));
+
+                        controller.recordFor(time);
+                    } catch (NumberFormatException ex) {
+                        sendResponse("400 Malformed Input: time must be an integer", 400, e);
+                    }
+                } else {
+                    sendResponse("400 Malformed Input: time is missing", 400, e);
+                }
+            } else {
+                sendResponse("405 Method Not Allowed: use POST", 405, e);
+            }
+        });
     }
 
     public void start() {
-        Thread serverThread = new Thread(() -> {
-            try {
-                server.start();
-            } catch (Exception e) {
-                System.err.println("Exception in web server thread.");
-                e.printStackTrace();
-                controller.shutdown();
-            }
-        });
-        serverThread.setName("web_server_thread");
-        serverThread.start();
+        server.start();
     }
 
     private void redirect(String path, HttpExchange exchange) throws IOException {
@@ -68,12 +78,18 @@ public class WebServer {
                     out.write(buff, 0, count);
                 }
             }
+            exchange.close();
         }
     }
 
     private void sendResponse(String response, int code, HttpExchange exchange) throws IOException {
         byte[] bytes = response.getBytes();
         exchange.sendResponseHeaders(code, bytes.length);
-        exchange.getResponseBody().write(bytes);
+        try {
+            exchange.getResponseBody().write(bytes);
+        } finally {
+            exchange.getResponseBody().close();
+            exchange.close();
+        }
     }
 }

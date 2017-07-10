@@ -2,16 +2,16 @@ package net.acomputerdog.picam;
 
 import net.acomputerdog.picam.web.WebServer;
 
-import java.io.IOException;
-
 public class PiCamController {
 
     private final WebServer webServer;
+    private final Camera camera;
 
     private PiCamController() {
         try {
             this.webServer = new WebServer(this);
-        } catch (IOException e) {
+            this.camera = new Camera(this, 0);
+        } catch (Exception e) {
             throw new RuntimeException("Exception setting up camera", e);
         }
     }
@@ -24,6 +24,14 @@ public class PiCamController {
     public void shutdown() {
         System.out.println("Shutting down controller.");
         System.exit(0);
+    }
+
+    public String buildStatusLine() {
+        return camera.isRecording() ? "<div style=\"color: red\">recording</div>" : "<div style=\"color: green\">idle</div>";
+    }
+
+    public void recordFor(int time) {
+        camera.recordFor(time);
     }
 
     public static void main(String[] args) {

@@ -36,6 +36,13 @@ body {
     /*border: 1px solid green;*/
 }
 
+.grid_item {
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
 .warning_message {
     font-size: 100%;
     color: red;
