@@ -2,15 +2,23 @@ package net.acomputerdog.picam;
 
 import net.acomputerdog.picam.web.WebServer;
 
+import java.io.File;
+
 public class PiCamController {
 
     private final WebServer webServer;
-    private final Camera camera;
+    private final Camera[] cameras;
+    private final File vidDir;
 
     private PiCamController() {
         try {
             this.webServer = new WebServer(this);
-            this.camera = new Camera(this, 0);
+            this.cameras = new Camera[]{new Camera(this, 0)};
+
+            vidDir = new File("./videos/");
+            if (!vidDir.isDirectory() && !vidDir.mkdir()) {
+                System.out.println("Unable to create video directory");
+            }
         } catch (Exception e) {
             throw new RuntimeException("Exception setting up camera", e);
         }
@@ -26,16 +34,12 @@ public class PiCamController {
         System.exit(0);
     }
 
-    public String getStatusString() {
-        return camera.isRecording() ? "1" : "0";
+    public Camera getCamera(int num) {
+        return cameras[num];
     }
 
-    public void recordFor(int time) {
-        camera.recordFor(time);
-    }
-
-    public void stopRecording() {
-        camera.stop();
+    public File getVidDir() {
+        return vidDir;
     }
 
     public static void main(String[] args) {

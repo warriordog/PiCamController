@@ -27,6 +27,7 @@
 
             function startNow() {
                 var time = document.getElementById("record_time").value;
+                var path = document.getElementById("record_text").value;
                 if (isNaN(time)) {
                     document.getElementById("invalid_time_div").style.display = "inline-flex";
                 } else {
@@ -35,7 +36,7 @@
                     document.getElementById("invalid_time_div").style.display = "none";
                     document.getElementById("record_button").value = "Stop";
 
-                    startRecording(time);
+                    startRecording(time, path);
                 }
             }
         </script>
@@ -44,7 +45,7 @@
             <p class="warning_message" id="javascript_warning">
                 This site requires javascript to work correctly.
             </p>
-            <h1 class="grid_row" id="controller_version">
+            <h1 class="top_grid_row" id="controller_version">
                 Pi Camera Controller ???
             </h1>
             <div class="grid_row">
@@ -62,8 +63,9 @@
                     <input type="button" id="record_button" value="Record" onclick="showStart()">
                 </div>
                 <div class="grid_item" id="start_settings_div" style="display: none">
-                    <input type="button" value="Start" onclick="startNow()">
-                    Record for: <input type="text" id="record_time" value="0">
+                    <input type="button" value="Start" onclick="startNow()"> <br>
+                    Record for: <input type="text" id="record_time" value="0"> <br>
+                    Filename: <input type="text" id="record_text" value="0">
                 </div>
             </div>
             <div class="grid_row" id="invalid_time_div" style="display: none; color: red;">

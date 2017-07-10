@@ -1,8 +1,8 @@
 // start recording
-function startRecording(time) {
+function startRecording(time, path) {
     var req = new XMLHttpRequest();
     req.open("POST", "/func/record", true); // true for asynchronous
-    req.send("time=" + time);
+    req.send(time + "," + path);
 }
 
 // stop recording

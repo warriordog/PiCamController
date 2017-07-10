@@ -20,20 +20,26 @@ body {
     /*border: 1px solid red;*/
 }
 
-.grid_row, .warning_message {
+.grid_row, .top_grid_row, .warning_message {
     display: inline-flex;
 
     flex-direction: row;
     align-items: stretch;
     justify-content: center;
 
-    margin-top: 5px;
-    margin-bottom: 5px;
-    margin-left: 0;
-    margin-right: 0;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 0;
+    padding-right: 0;
+
+    border-top: 1px solid black;
 
     /* Debugging */
     /*border: 1px solid green;*/
+}
+
+.top_grid_row {
+    border-top: none;
 }
 
 .grid_item {

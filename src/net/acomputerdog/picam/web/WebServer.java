@@ -3,6 +3,7 @@ package net.acomputerdog.picam.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
+import net.acomputerdog.picam.file.VideoFile;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -27,32 +28,39 @@ public class WebServer {
             sendResponse("200 OK", 200, e);
             controller.shutdown();
         });
-        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.0.0", 200, e));
-        server.createContext("/func/status", e -> sendResponse(controller.getStatusString(), 200, e));
+        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.0.1", 200, e));
+        server.createContext("/func/status", e -> sendResponse(controller.getCamera(0).isRecording() ? "1" : "0", 200, e));
         server.createContext("/func/record", e -> {
             if ("POST".equals(e.getRequestMethod())) {
-                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
+                if (!controller.getCamera(0).isRecording()) {
+                    String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
+                    String[] parts = request.split(",");
+                    if (parts.length == 2) {
+                        try {
+                            int time = Integer.parseInt(parts[0]);
+                            String fileName = parts[1].replace('.', '_').replace('/', '_').replace('~', '_');
 
-                int idx = request.indexOf('=');
-                if (idx > -1 && request.length() - idx > 1) {
-                    try {
-                        int time = Integer.parseInt(request.substring(idx + 1));
+                            System.out.println("Creating video file: " + fileName);
+                            controller.getCamera(0).recordFor(time, new VideoFile(controller.getVidDir(), fileName));
 
-                        controller.recordFor(time);
-                    } catch (NumberFormatException ex) {
-                        sendResponse("400 Malformed Input: time must be an integer", 400, e);
+                            sendResponse("200 OK", 200, e);
+                        } catch (NumberFormatException ex) {
+                            sendResponse("400 Malformed Input: time must be an integer", 400, e);
+                        }
+
+                    } else {
+                        sendResponse("400 Malformed Input: wrong number of arguments", 400, e);
                     }
                 } else {
-                    sendResponse("400 Malformed Input: time is missing", 400, e);
+                    sendResponse("409 Conflict: Already recording.", 409, e);
                 }
             } else {
                 sendResponse("405 Method Not Allowed: use POST", 405, e);
             }
         });
         server.createContext("/func/record_stop", e -> {
-            sendResponse(controller.getStatusString(), 200, e);
-
-            controller.stopRecording();
+            sendResponse("200 OK", 200, e);
+            controller.getCamera(0).stop();
         });
     }
 
@@ -66,7 +74,7 @@ public class WebServer {
     }
 
     private void sendFile(HttpExchange exchange) throws IOException {
-        String fullPath = "/web/" + exchange.getRequestURI().getPath().replace("..", "");
+        String fullPath = "/web" + exchange.getRequestURI().getPath().replace("..", "");
         InputStream in = getClass().getResourceAsStream(fullPath);
 
         if (in == null) {
