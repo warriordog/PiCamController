@@ -28,6 +28,8 @@
             function startNow() {
                 var time = document.getElementById("record_time").value;
                 var path = document.getElementById("record_text").value;
+                var settings = document.getElementById("camera_settings").value;
+
                 if (isNaN(time)) {
                     document.getElementById("invalid_time_div").style.display = "inline-flex";
                 } else {
@@ -36,7 +38,7 @@
                     document.getElementById("invalid_time_div").style.display = "none";
                     document.getElementById("record_button").value = "Stop";
 
-                    startRecording(time, path);
+                    startRecording(time, path, settings);
                 }
             }
         </script>
@@ -65,7 +67,8 @@
                 <div class="grid_item" id="start_settings_div" style="display: none">
                     <input type="button" value="Start" onclick="startNow()"> <br>
                     Record for: <input type="text" id="record_time" value="0"> <br>
-                    Filename: <input type="text" id="record_text" value="0">
+                    Filename: <input type="text" id="record_text" value="0"> <br>
+                    Camera settings: <input type="text" id="camera_settings" value="">
                 </div>
             </div>
             <div class="grid_row" id="invalid_time_div" style="display: none; color: red;">

@@ -41,12 +41,17 @@ public class WebServer {
             if ("POST".equals(e.getRequestMethod())) {
                 if (!controller.getCamera(0).isRecording()) {
                     String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
-                    String[] parts = request.split(",");
-                    if (parts.length == 2) {
+
+                    String[] parts = request.split("\\|");
+                    if (parts.length == 2 || parts.length == 3) {
                         try {
-                            int time = Integer.parseInt(parts[0]);
+                            int time = Integer.parseInt(parts[0]) * 1000;
                             String fileName = parts[1].replace('.', '_').replace('/', '_').replace('~', '_');
 
+                            // workaround for bug where a string that ends with a delimiter is not properly split
+                            String[] settings = parts.length == 3 ? parts[2].split(" ") : new String[0];
+
+                            controller.getCamera(0).getSettings().addSettingPairs(settings);
                             controller.getCamera(0).recordFor(time, new VideoFile(controller.getVidDir(), fileName));
 
                             sendResponse("200 OK", 200, e);

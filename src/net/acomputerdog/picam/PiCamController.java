@@ -1,5 +1,6 @@
 package net.acomputerdog.picam;
 
+import net.acomputerdog.picam.camera.Camera;
 import net.acomputerdog.picam.web.WebServer;
 
 import java.io.File;

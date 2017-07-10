@@ -1,15 +1,19 @@
-package net.acomputerdog.picam;
+package net.acomputerdog.picam.camera;
 
+import net.acomputerdog.picam.PiCamController;
 import net.acomputerdog.picam.file.VideoFile;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Camera {
     private final PiCamController controller;
     private final int cameraNumber;
+    private CameraSettings settings;
 
     private boolean recording = false;
     private long recordStart = 0;
@@ -24,6 +28,7 @@ public class Camera {
     public Camera(PiCamController controller, int cameraNumber) {
         this.controller = controller;
         this.cameraNumber = cameraNumber;
+        this.settings = new CameraSettings();
     }
 
     public int getCameraNumber() {
@@ -43,7 +48,22 @@ public class Camera {
             this.recordFile = videoFile;
 
             ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command("raspivid", "-o", "-", "-w", "1920", "-h", "1080", "-md", "1", "-b", "0", "-t", String.valueOf(time), "-fps", "30", "-g", "150", "-ex", "antishake", "-awb", "fluorescent", "-drc", "med", "-qp", "0", "-n", "-ih", "-lev", "high", "-fl");
+
+            List<String> command = new ArrayList<>();
+            command.add("raspivid");
+            command.add("-o");
+            command.add("-");
+            command.add("-t");
+            command.add(String.valueOf(time));
+            command.add("-n");
+            settings.buildCommandLine(command);
+
+            printList(command);
+
+            processBuilder.command(command);
+
+
+            //processBuilder.command("raspivid", "-o", "-", "-w", "1920", "-h", "1080", "-md", "1", "-b", "0", "-t", String.valueOf(time), "-fps", "30", "-g", "150", "-ex", "antishake", "-awb", "fluorescent", "-drc", "med", "-qp", "0", "-n", "-ih", "-lev", "high", "-fl");
             processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
@@ -109,6 +129,10 @@ public class Camera {
         return recordFile == null ? "N/A" : recordFile.getFile().getAbsolutePath();
     }
 
+    public CameraSettings getSettings() {
+        return settings;
+    }
+
     private static void flushBuffers(InputStream in, OutputStream out) throws IOException {
         try {
             byte[] buff = new byte[64];
@@ -137,5 +161,16 @@ public class Camera {
 
             }
         }
+    }
+
+    private static void printList(List<?> list) {
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                System.out.print(" ");
+            }
+            Object obj = list.get(i);
+            System.out.print(String.valueOf(obj));
+        }
+        System.out.println();
     }
 }
