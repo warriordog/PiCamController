@@ -48,7 +48,10 @@ function updateLoop() {
                         timeDiv.innerHTML = (respArray[2] / 1000) + "s";
                         progressDiv.style.display = "inline-flex";
                     } else {
-                        recordButton.value = "Record";
+                        if (recordButton.value === "Stop") {
+                            recordButton.value = "Record";
+                        }
+
                         statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";
                         progressDiv.style.display = "none";
                     }

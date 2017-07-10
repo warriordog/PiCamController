@@ -9,7 +9,7 @@ body {
     justify-content: center;
 }
 
-.grid_main {
+.grid_main, .inner_grid_main {
     display: flex;
 
     flex-direction: column;
@@ -20,19 +20,22 @@ body {
     /*border: 1px solid red;*/
 }
 
-.grid_row, .top_grid_row, .warning_message {
-    display: inline-flex;
-
-    flex-direction: row;
-    align-items: stretch;
-    justify-content: center;
+.inner_grid_main, .grid_row, .top_grid_row, .warning_message {
+    border-top: 1px solid black;
 
     padding-top: 5px;
     padding-bottom: 5px;
     padding-left: 0;
     padding-right: 0;
+}
 
-    border-top: 1px solid black;
+.grid_row, .top_grid_row, .inner_grid_row, .warning_message {
+    display: flex;
+
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
 
     /* Debugging */
     /*border: 1px solid green;*/
@@ -40,6 +43,11 @@ body {
 
 .top_grid_row {
     border-top: none;
+}
+
+.inner_grid_row {
+    border: none;
+    padding: 0 0 0 0;
 }
 
 .grid_item {

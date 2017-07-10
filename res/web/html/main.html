@@ -6,6 +6,12 @@
         </title>
         <link rel="stylesheet" href="/include/css/common.css">
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <style>
+            .setting_label {
+                flex-grow: 1;
+                margin: 5px 0;
+            }
+        </style>
     </head>
     <body>
         <script type="text/javascript">
@@ -13,12 +19,14 @@
                 var buttonText = document.getElementById("record_button").value;
                 if (buttonText === "Record") {
                     document.getElementById("record_button").value = "Cancel";
-                    document.getElementById("start_settings_div").style.display = "inline-block";
+                    document.getElementById("start_settings_div").style.display = "flex";
+                    document.getElementById("start_button_div").style.display = "flex";
                     document.getElementById("invalid_time_div").style.display = "none";
                 } else if (buttonText === "Cancel") {
                     document.getElementById("record_button").value = "Record";
                     document.getElementById("start_settings_div").style.display = "none";
-                } else {
+                    document.getElementById("start_button_div").style.display = "none";
+                } else { //stop
                     document.getElementById("record_button").value = "Record";
 
                     stopRecording();
@@ -31,10 +39,11 @@
                 var settings = document.getElementById("camera_settings").value;
 
                 if (isNaN(time)) {
-                    document.getElementById("invalid_time_div").style.display = "inline-flex";
+                    document.getElementById("invalid_time_div").style.display = "flex";
                 } else {
                     document.getElementById("record_button").value = "Record";
                     document.getElementById("start_settings_div").style.display = "none";
+                    document.getElementById("start_button_div").style.display = "none";
                     document.getElementById("invalid_time_div").style.display = "none";
                     document.getElementById("record_button").value = "Stop";
 
@@ -64,11 +73,28 @@
                 <div class="grid_item">
                     <input type="button" id="record_button" value="Record" onclick="showStart()">
                 </div>
-                <div class="grid_item" id="start_settings_div" style="display: none">
-                    <input type="button" value="Start" onclick="startNow()"> <br>
-                    Record for: <input type="text" id="record_time" value="0"> <br>
-                    Filename: <input type="text" id="record_text" value="0"> <br>
-                    Camera settings: <input type="text" id="camera_settings" value="">
+                <div class="grid_item" id="start_button_div" style="display: none">
+                    <input type="button" value="Start" onclick="startNow()">
+                </div>
+            </div>
+            <div class="inner_grid_main" id="start_settings_div" style="display: none; justify-content: flex-start">
+                <div class="inner_grid_row" style="align-items: baseline">
+                    <p class="setting_label">
+                        Record for:
+                    </p>
+                    <input type="text" id="record_time" value="0">
+                </div>
+                <div class="inner_grid_row" style="align-items: baseline">
+                    <p class="setting_label">
+                        Filename:
+                    </p>
+                    <input type="text" id="record_text" value="my_video"> <br>
+                </div>
+                <div class="inner_grid_row" style="align-items: baseline">
+                    <p class="setting_label">
+                        Camera settings:
+                    </p>
+                    <input type="text" id="camera_settings" value="">
                 </div>
             </div>
             <div class="grid_row" id="invalid_time_div" style="display: none; color: red;">
