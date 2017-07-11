@@ -6,7 +6,6 @@ import java.util.List;
 public class Settings {
     protected final SettingsList list = new SettingsList();
 
-
     public void buildCommandLine(List<String> cmd) {
         for (Setting setting : list.getAllSettings()) {
             if (setting.isIncluded()) {
@@ -44,5 +43,9 @@ public class Settings {
                 System.out.println("Ignoring unknown setting pair: " + pair);
             }
         }
+    }
+
+    public SettingsList getList() {
+        return list;
     }
 }

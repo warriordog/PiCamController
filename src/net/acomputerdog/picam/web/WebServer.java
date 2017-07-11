@@ -3,6 +3,8 @@ package net.acomputerdog.picam.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
+import net.acomputerdog.picam.camera.Setting;
+import net.acomputerdog.picam.camera.Settings;
 import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
 
@@ -10,6 +12,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class WebServer {
@@ -236,6 +239,57 @@ public class WebServer {
             } else {
                 sendResponse("202 Accepted: waiting for snapshot", 202, e);
             }
+        });
+        server.createContext("/func/reboot", e -> {
+            try {
+                Runtime.getRuntime().exec("sudo reboot");
+                sendResponse("200 OK", 200, e);
+            } catch (IOException ex) {
+                sendResponse("500 Intenal Server Error: failed to execute reboot command", 500, e);
+            }
+        });
+        server.createContext("/func/getsettings", e -> {
+            String req = e.getRequestURI().getQuery();
+
+            Settings settings = null;
+            if ("v".equals(req)) {
+                settings = controller.getCamera(0).getVidSettings();
+            } else if ("p".equals(req)) {
+                settings = controller.getCamera(0).getPicSettings();
+            }
+
+            if (settings != null) {
+                StringBuilder builder = new StringBuilder();
+                List<Setting> allSettings = settings.getList().getAllSettings();
+                for (int i = 0; i < allSettings.size(); i++) {
+                    if (i > 0) {
+                        builder.append("|");
+                    }
+                    Setting setting = allSettings.get(i);
+                    builder.append(setting.getKey());
+                    builder.append("=");
+                    // an empty value means null
+                    if (setting.isIncluded()) {
+                        builder.append(setting.getValue());
+                    }
+                }
+                sendResponse(builder.toString(), 200, e);
+            } else {
+                sendResponse("400 Malformed Input: unknown resource type", 400, e);
+            }
+        });
+        server.createContext("/func/resetsettings", e -> {
+            String req = e.getRequestURI().getQuery();
+            if ("v".equals(req)) {
+                controller.getCamera(0).resetVidSettings();
+                sendResponse("200 OK", 200, e);
+            } else if ("p".equals(req)) {
+                controller.getCamera(0).resetPicSettings();
+                sendResponse("200 OK", 200, e);
+            } else {
+                sendResponse("400 Malformed Input: unknown resource type", 400, e);
+            }
+
         });
     }
 

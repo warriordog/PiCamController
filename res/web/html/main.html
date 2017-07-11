@@ -107,6 +107,29 @@
             function closeLastSnapshot() {
                 document.getElementById("last_snapshot_div").style.display = "none";
             }
+
+            function showSettings() {
+                var div = document.getElementById("settings_div");
+                var vidSettings = document.getElementById("vid_defaults_field");
+                var snapSettings = document.getElementById("snap_defaults_field");
+
+                div.style.display = "flex";
+                populateSettings('v', vidSettings);
+                populateSettings('p', snapSettings);
+            }
+
+            function hideSettings() {
+                var div = document.getElementById("settings_div");
+                div.style.display = "none";
+            }
+
+            function resetVidSettings() {
+                resetSettings('v', document.getElementById("vid_defaults_field"));
+            }
+
+            function resetSnapSettings() {
+                resetSettings('s', document.getElementById("snap_defaults_field"));
+            }
         </script>
 
         <!-- Main window grid -->
@@ -269,6 +292,62 @@
                 <div class="inner_grid_row">
                     <div class="grid_item" style="max-width: 400px">
                         <img id="last_snapshot_img" width="400" src="#" alt="Last snapshot">
+                    </div>
+                </div>
+            </div>
+
+            <!-- system functions -->
+            <div class="grid_row">
+                <div class="grid_item" style="flex-grow: 1;">
+                    System:
+                </div>
+                <!-- Settings -->
+                <div class="grid_item">
+                    <input type="button" value="Settings" onclick="showSettings()">
+                </div>
+                <!-- Exit -->
+                <div class="grid_item">
+                    <input type="button" value="Exit" onclick="exitProgram()">
+                </div>
+                <!-- Reboot -->
+                <div class="grid_item">
+                    <input type="button" value="Reboot" onclick="rebootSystem()">
+                </div>
+            </div>
+
+            <!-- hidden gridrow with settings -->
+            <div class="inner_grid_main" id="settings_div" style="display: none">
+                <!-- Title row -->
+                <div class="inner_grid_row">
+                    <div class="grid_item" style="flex-grow: 1;">
+                        Camera settings:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="hideSettings()">
+                    </div>
+                </div>
+                <!-- video settings -->
+                <div class="inner_grid_row">
+                    <div class="grid_item" style="flex-grow: 1;">
+                        Video defaults:
+                    </div>
+                    <div class="grid_item">
+                        <input type="text" id="vid_defaults_field" value="">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Reset" onclick="resetVidSettings()">
+                    </div>
+                </div>
+                <!-- picture defaults -->
+                <div class="inner_grid_row">
+                    <div class="grid_item" style="flex-grow: 1;">
+                        Snapshot defaults:
+                    </div>
+                    <div class="grid_item">
+                        <input type="text" id="snap_defaults_field" value="">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Reset" onclick="resetSnapSettings()">
                     </div>
                 </div>
             </div>

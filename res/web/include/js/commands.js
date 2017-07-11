@@ -53,3 +53,45 @@ function loadSnap(div, img) {
     req.open("GET", "/func/check_snap", true); // true for asynchronous
     req.send(name);
 }
+
+// exit program
+function exitProgram() {
+    var req = new XMLHttpRequest();
+    req.open("GET", "/func/exit", true); // true for asynchronous
+    req.send();
+}
+
+// reboot pi
+function rebootSystem() {
+    var req = new XMLHttpRequest();
+    req.open("GET", "/func/reboot", true); // true for asynchronous
+    req.send();
+}
+
+// gets settings and fills in field
+function populateSettings(type, field) {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (req.readyState === 4) {
+            if (req.status === 200) {
+                field.value = req.responseText.replace(/\|/g, " ");
+            }
+        }
+    };
+    req.open("GET", "/func/getsettings?" + type, true); // true for asynchronous
+    req.send();
+}
+
+// reset settings and fill in field
+function resetSettings(type, field) {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (req.readyState === 4) {
+            if (req.status === 200) {
+                populateSettings(type, field);
+            }
+        }
+    };
+    req.open("GET", "/func/resetsettings?" + type, true); // true for asynchronous
+    req.send();
+}

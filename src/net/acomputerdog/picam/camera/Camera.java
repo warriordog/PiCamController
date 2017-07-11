@@ -203,6 +203,14 @@ public class Camera {
         return lastSnapshot != null;
     }
 
+    public void resetVidSettings() {
+        vidSettings = new VidSettings();
+    }
+
+    public void resetPicSettings() {
+        picSettings = new PicSettings();
+    }
+
     private static void flushBuffers(InputStream in, OutputStream out) throws IOException {
         try {
             byte[] buff = new byte[64];
