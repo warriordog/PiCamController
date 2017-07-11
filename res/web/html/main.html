@@ -77,6 +77,36 @@
                     cancelSnap();
                 }
             }
+
+            function browseVideos() {
+                var button = document.getElementById("browse_vid_button");
+                var div = document.getElementById("video_list_div");
+
+                if (button.value === "Videos") {
+                    button.value = "Close";
+                    div.style.display = "flex";
+
+                    createFilelist("v", "video_list_div");
+                } else {
+                    button.value = "Videos";
+                    div.style.display = "none";
+                }
+            }
+
+            function browseSnapshots() {
+                var button = document.getElementById("browse_snapshot_button");
+                var div = document.getElementById("snapshot_list_div");
+
+                if (button.value === "Snapshots") {
+                    button.value = "Close";
+                    div.style.display = "flex";
+
+                    createFilelist("p", "snapshot_list_div");
+                } else {
+                    button.value = "Snapshots";
+                    div.style.display = "none";
+                }
+            }
         </script>
 
         <div class="grid_main">
@@ -155,10 +185,26 @@
                     <input type="text" id="snapshot_name" value="my_picture">
                 </div>
             </div>
+            <div class="grid_row">
+                <div class="grid_item">
+                    Browse:
+                </div>
+                <div class="grid_item">
+                    <input type="button" id="browse_vid_button" value="Videos" onclick="browseVideos()">
+                </div>
+                <div class="grid_item">
+                    <input type="button" id="browse_snapshot_button" value="Snapshots" onclick="browseSnapshots()">
+                </div>
+            </div>
+            <div class="inner_grid_main" id="video_list_div" style="display: none">
+            </div>
+            <div class="inner_grid_main" id="snapshot_list_div" style="display: none">
+            </div>
         </div>
 
         <script src="/include/js/common.js"></script>
         <script src="/include/js/status.js"></script>
         <script src="/include/js/commands.js"></script>
+        <script src="/include/js/filelist.js"></script>
     </body>
 </html>

@@ -8,6 +8,8 @@ import net.acomputerdog.picam.file.JPGFile;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class WebServer {
@@ -109,7 +111,10 @@ public class WebServer {
                             if (file.isFile()) {
                                 try {
                                     InputStream in = new FileInputStream(file);
+
                                     e.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"" + resourcePath + "\"");
+                                    e.getResponseHeaders().add("Content-Type", "video/mp4");
+
                                     sendFile(e, in);
                                 } catch (FileNotFoundException ex) {
                                     sendResponse("404 Not Found: Filesystem error", 404, e);
@@ -129,6 +134,82 @@ public class WebServer {
                 }
             } else {
                 sendResponse("405 Method Not Allowed: use GET", 405, e);
+            }
+        });
+        server.createContext("/func/listfiles", e -> {
+            String request = e.getRequestURI().getQuery();
+
+            File dir = null;
+            if ("v".equals(request)) {
+                dir = controller.getVidDir();
+            } else if ("p".equals(request)) {
+                dir = controller.getPicDir();
+            }
+
+            if (dir != null) {
+                StringBuilder resp = new StringBuilder();
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                File[] files = dir.listFiles();
+                if (files != null) {
+                    // sort by modified time
+                    Arrays.sort(files, (o1, o2) -> (int) (o2.lastModified() - o1.lastModified()));
+
+                    for (int i = 0; i < files.length; i++) {
+                        if (i > 0) {
+                            resp.append('|');
+                        }
+                        File file = files[i];
+                        resp.append(file.getName());
+                        resp.append(',');
+                        resp.append(formatFileSize(file.length()));
+                        resp.append(',');
+                        resp.append(dateFormat.format(file.lastModified()));
+                    }
+                }
+                sendResponse(resp.toString(), 200, e);
+            } else {
+                sendResponse("400 Malformed Input: missing arguments", 400, e);
+            }
+        });
+        server.createContext("/func/delete", e -> {
+            if ("POST".equals(e.getRequestMethod())) {
+                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
+                int split = request.indexOf('|');
+                if (split > 0 && request.length() - split > 1) {
+                    String type = request.substring(0, split);
+                    File dir = null;
+                    if ("v".equals(type)) {
+                        dir = controller.getVidDir();
+                    } else if ("p".equals(type)) {
+                        dir = controller.getPicDir();
+                    }
+
+                    if (dir != null) {
+                        String path = request.substring(split + 1);
+                        if (!path.contains("/") && !path.contains("\\")) {
+                            File file = new File(dir, path);
+                            if (file.exists()) {
+                                if (file.delete()) {
+                                    sendResponse("200 OK", 200, e);
+                                } else {
+                                    System.out.printf("Unable to delete file '%s'\n", file.getPath());
+                                    sendResponse("500 Internal Error: unable to delete file", 500, e);
+                                }
+                            } else {
+                                sendResponse("400 Malformed Input: file does not exist", 400, e);
+                            }
+                        } else {
+                            sendResponse("400 Malformed Input: invalid file name", 400, e);
+                        }
+                    } else {
+                        sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                    }
+                } else {
+                    sendResponse("400 Malformed Input: missing arguments", 400, e);
+                }
+            } else {
+                sendResponse("405 Method Not Allowed: use POST", 405, e);
             }
         });
     }
@@ -177,5 +258,23 @@ public class WebServer {
             exchange.getResponseBody().close();
             exchange.close();
         }
+    }
+
+    private static String formatFileSize(long size) {
+        String[] units = new String[]{"  B"," KB"," MB"," GB"," TB"," PB"," EB"};
+        int scale = 0;
+
+        long leftOver = size;
+        while (leftOver > 1024) {
+            // cut short when we have more than 1024 exobytes
+            if (scale >= units.length) {
+                break;
+            }
+
+            leftOver = leftOver >> 10;
+            scale++;
+        }
+
+        return leftOver + units[scale];
     }
 }
