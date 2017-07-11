@@ -15,18 +15,12 @@ body {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-
-    /* Debugging */
-    /*border: 1px solid red;*/
 }
 
 .inner_grid_main, .grid_row, .top_grid_row, .warning_message {
     border-top: 1px solid black;
 
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 0;
-    padding-right: 0;
+    padding: 5px 0;
 }
 
 .grid_row, .top_grid_row, .inner_grid_row, .warning_message {
@@ -36,9 +30,11 @@ body {
     align-items: stretch;
     justify-content: center;
     flex-wrap: wrap;
+}
 
-    /* Debugging */
-    /*border: 1px solid green;*/
+.inner_grid_main {
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 .top_grid_row {
@@ -50,11 +46,16 @@ body {
     padding: 2px 0;
 }
 
-.grid_item {
-    margin-top: 0;
-    margin-bottom: 0;
-    margin-left: 5px;
-    margin-right: 5px;
+.grid_item, .grid_item_long, .grid_item_title {
+    margin: 0 5px;
+}
+
+.grid_item_long, .grid_item_title {
+    flex-grow: 1;
+}
+
+.grid_item_title {
+    text-decoration: underline;
 }
 
 .warning_message {

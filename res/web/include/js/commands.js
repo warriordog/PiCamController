@@ -1,5 +1,5 @@
 // start recording
-function startRecording(time, path, settings) {
+function sendStartRecording(time, path, settings) {
     var req = new XMLHttpRequest();
     req.open("POST", "/func/record", true); // true for asynchronous
 
@@ -7,14 +7,14 @@ function startRecording(time, path, settings) {
 }
 
 // stop recording
-function stopRecording() {
+function sendStopRecording() {
     var req = new XMLHttpRequest();
     req.open("GET", "/func/record_stop", true); // true for asynchronous
     req.send();
 }
 
 // take a snapshot
-function takeSnapshot(name, div, img) {
+function sendTakeSnapshot(name, div, img) {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
         if (req.readyState === 4) {
@@ -55,14 +55,14 @@ function loadSnap(div, img) {
 }
 
 // exit program
-function exitProgram() {
+function sendExitProgram() {
     var req = new XMLHttpRequest();
     req.open("GET", "/func/exit", true); // true for asynchronous
     req.send();
 }
 
 // reboot pi
-function rebootSystem() {
+function sendRebootSystem() {
     var req = new XMLHttpRequest();
     req.open("GET", "/func/reboot", true); // true for asynchronous
     req.send();

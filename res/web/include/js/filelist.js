@@ -10,8 +10,8 @@ function createFilelist(fileType, divName, categoryName) {
                 var respArray = req.responseText.split("|");
 
                 var html = "";
-                html += "<div class='inner_grid_row' style='justify-content: flex-end'>";
-                html += "<div class='grid_item'>";
+                html += "<div class='inner_grid_row'>";
+                html += "<div class='grid_item_title'>";
                 html += categoryName + " files:";
                 html += "</div>";
                 html += "<div class='grid_item'>";

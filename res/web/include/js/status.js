@@ -15,11 +15,6 @@
     }
 }
 
-// retrieve camera status
-function getCameraStatus() {
-
-}
-
 // interval for update loop
 var updateLoopInterval = 500;
 // timer for update loop
@@ -46,12 +41,13 @@ function updateLoop() {
                         statusDiv.innerHTML = "<div style=\"color: red\">recording</div>";
                         pathDiv.innerHTML = respArray[1];
                         timeDiv.innerHTML = (respArray[2] / 1000) + "s";
-                        progressDiv.style.display = "flex";
+
+                        showFlexElement(progressDiv);
                     } else {
                         // if progress is visible, then we were recording
                         if (progressDiv.style.display !== "none") {
-                            progressDiv.style.display = "none";
-                            recordDiv.style.display = "flex";
+                            hideElement(progressDiv);
+                            showFlexElement(recordDiv);
                         }
 
                         statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";

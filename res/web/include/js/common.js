@@ -20,3 +20,11 @@ function hideElementID(elementId) {
 function hideElement(element) {
     element.style.display = "none";
 }
+
+function showFlexElementID(elementID) {
+    showFlexElement(document.getElementById(elementID));
+}
+
+function showFlexElement(element) {
+    element.style.display = "flex";
+}
