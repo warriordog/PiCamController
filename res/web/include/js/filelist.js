@@ -1,5 +1,5 @@
 // embed a file list
-function createFilelist(fileType, divName) {
+function createFilelist(fileType, divName, categoryName) {
     var div = document.getElementById(divName);
     div.innerHTML = "";
 
@@ -10,6 +10,10 @@ function createFilelist(fileType, divName) {
                 var respArray = req.responseText.split("|");
 
                 var html = "";
+                html += "<div class=\"inner_grid_row\">";
+                html += categoryName + " files:";
+                html += "</div>";
+
                 for (var i = 0; i < respArray.length; i++) {
                     var entry = respArray[i];
                     var entryParts = entry.split(",");
@@ -37,7 +41,7 @@ function createFilelist(fileType, divName) {
                         html += "</div>";
 
                         html += "<div class=\"grid_item\">";
-                        html += "<a href='#' onclick=\"deleteFile('" + fileType + "', '" + fileName + "', '" + divName + "')\">[Delete]</a>";
+                        html += "<a href='#' onclick=\"deleteFile('" + fileType + "', '" + fileName + "', '" + divName + "', '" + categoryName + "')\">[Delete]</a>";
                         html += "</div>";
 
                         html += "</div>";
@@ -55,7 +59,7 @@ function createFilelist(fileType, divName) {
 }
 
 // delete a file
-function deleteFile(fileType, fileName, divName) {
+function deleteFile(fileType, fileName, divName, categoryName) {
     var req = new XMLHttpRequest();
     var div = document.getElementById(divName);
 
@@ -64,7 +68,7 @@ function deleteFile(fileType, fileName, divName) {
             if (req.status === 200) {
                 // if list is still open, then rebuild without deleted file
                 if (div.style.display != "none") {
-                    createFilelist(fileType, divName)
+                    createFilelist(fileType, divName, categoryName)
                 }
             }
         }
