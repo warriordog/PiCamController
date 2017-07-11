@@ -21,7 +21,7 @@
             }
 
             function cancelSnap() {
-                document.getElementById("show_snapshot_button").value = "Picture";
+                document.getElementById("show_snapshot_button").value = "Snapshot";
                 document.getElementById("snapshot_div").style.display = "none";
             }
 
@@ -68,7 +68,7 @@
 
             function showSnapshot() {
                 var snapButton = document.getElementById("show_snapshot_button");
-                if (snapButton.value === "Picture") {
+                if (snapButton.value === "Snapshot") {
                     snapButton.value = "Cancel";
                     document.getElementById("snapshot_div").style.display = "flex";
 
@@ -82,13 +82,13 @@
                 var button = document.getElementById("browse_vid_button");
                 var div = document.getElementById("video_list_div");
 
-                if (button.value === "Videos") {
+                if (button.value === "Video") {
                     button.value = "Close";
                     div.style.display = "flex";
 
                     createFilelist("v", "video_list_div", "Video");
                 } else {
-                    button.value = "Videos";
+                    button.value = "Video";
                     div.style.display = "none";
                 }
             }
@@ -97,13 +97,13 @@
                 var button = document.getElementById("browse_snapshot_button");
                 var div = document.getElementById("snapshot_list_div");
 
-                if (button.value === "Snapshots") {
+                if (button.value === "Snapshot") {
                     button.value = "Close";
                     div.style.display = "flex";
 
                     createFilelist("p", "snapshot_list_div", "Snapshot");
                 } else {
-                    button.value = "Snapshots";
+                    button.value = "Snapshot";
                     div.style.display = "none";
                 }
             }
@@ -117,7 +117,7 @@
                 Pi Camera Controller ???
             </h1>
             <div class="grid_row">
-                <div class="grid_item">
+                <div class="grid_item" style="flex-grow: 1;">
                     Camera status:
                 </div>
                 <div class="grid_item" id="cam_status">
@@ -127,34 +127,48 @@
                 </div>
             </div>
             <div class="grid_row">
+                <div class="grid_item" style="flex-grow: 1;">
+                    Record:
+                </div>
                 <div class="grid_item">
                     <input type="button" id="record_button" value="Video" onclick="showStart()">
                 </div>
                 <div class="grid_item" id="show_snapshot_div">
-                    <input type="button" id="show_snapshot_button" value="Picture" onclick="showSnapshot()">
+                    <input type="button" id="show_snapshot_button" value="Snapshot" onclick="showSnapshot()">
                 </div>
             </div>
             <div class="inner_grid_main" id="start_settings_div" style="display: none; justify-content: flex-start">
                 <div class="inner_grid_row">
-                    <input type="button" value="Start" onclick="startNow()">
+                    <div class="grid_item" style="flex-grow: 1;">
+                        Record video:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Start" onclick="startNow()">
+                    </div>
                 </div>
                 <div class="inner_grid_row" style="align-items: baseline">
-                    <p class="setting_label">
+                    <div class="grid_item" style="flex-grow: 1;">
                         Record for:
-                    </p>
-                    <input type="text" id="record_time" value="0">
+                    </div>
+                    <div class="grid_item">
+                        <input type="text" id="record_time" value="0">
+                    </div>
                 </div>
                 <div class="inner_grid_row" style="align-items: baseline">
-                    <p class="setting_label">
+                    <p class="grid_item" style="flex-grow: 1;">
                         Filename:
                     </p>
-                    <input type="text" id="record_text" value="my_video">
+                    <div class="grid_item">
+                        <input type="text" id="record_text" value="my_video">
+                    </div>
                 </div>
                 <div class="inner_grid_row" style="align-items: baseline">
-                    <p class="setting_label">
+                    <p class="grid_item" style="flex-grow: 1;">
                         Camera settings:
                     </p>
-                    <input type="text" id="camera_settings" value="">
+                    <div class="grid_item">
+                        <input type="text" id="camera_settings" value="">
+                    </div>
                 </div>
             </div>
             <div class="grid_row" id="invalid_time_div" style="display: none; color: red;">
@@ -177,23 +191,33 @@
                     N/A
                 </div>
             </div>
-            <div class="grid_row" id="snapshot_div" style="display: none">
-                <div class="grid_item">
-                    <input type="button" value="Take snapshot" onclick="snapshot()">
+            <div class="inner_grid_main" id="snapshot_div" style="display: none">
+                <div class="inner_grid_row">
+                    <div class="grid_item" style="flex-grow: 1;">
+                        Record snapshot:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Save" onclick="snapshot()">
+                    </div>
                 </div>
-                <div class="grid_item">
-                    <input type="text" id="snapshot_name" value="my_picture">
+                <div class="inner_grid_row">
+                    <div class="grid_item" style="flex-grow: 1;">
+                        File path:
+                    </div>
+                    <div class="grid_item">
+                        <input type="text" id="snapshot_name" value="my_picture">
+                    </div>
                 </div>
             </div>
             <div class="grid_row">
-                <div class="grid_item">
+                <div class="grid_item" style="flex-grow: 1;">
                     Browse:
                 </div>
                 <div class="grid_item">
-                    <input type="button" id="browse_vid_button" value="Videos" onclick="browseVideos()">
+                    <input type="button" id="browse_vid_button" value="Video" onclick="browseVideos()">
                 </div>
                 <div class="grid_item">
-                    <input type="button" id="browse_snapshot_button" value="Snapshots" onclick="browseSnapshots()">
+                    <input type="button" id="browse_snapshot_button" value="Snapshot" onclick="browseSnapshots()">
                 </div>
             </div>
             <div class="inner_grid_main" id="video_list_div" style="display: none">
