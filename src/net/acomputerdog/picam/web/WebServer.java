@@ -219,6 +219,14 @@ public class WebServer {
             }
         });
         server.createContext("/func/lastsnap", e -> {
+            if (controller.getCamera(0).currentSnapshotReady()) {
+                String snapName = controller.getCamera(0).getLastSnapshot().getName();
+                sendResponse(snapName, 200, e);
+                //sendResponse("200 OK: Snapshot available", 200, e);
+            } else {
+                sendResponse("202 Accepted: waiting for snapshot", 202, e);
+            }
+            /*
             File snap = controller.getCamera(0).getLastSnapshot();
             if (snap != null && snap.exists()) {
                 try {
@@ -232,9 +240,10 @@ public class WebServer {
             } else {
                 sendResponse("503 Temporarily Unavailable: snapshot is not ready", 503, e);
             }
+            */
         });
         server.createContext("/func/check_snap", e -> {
-            if (controller.getCamera(0).snapshotAvailable()) {
+            if (controller.getCamera(0).currentSnapshotReady()) {
                 sendResponse("200 OK: Snapshot available", 200, e);
             } else {
                 sendResponse("202 Accepted: waiting for snapshot", 202, e);

@@ -59,8 +59,8 @@
                 createFilelist("p", divName, "Snapshot");
             }
 
-            function closeLastSnapshot() {
-                hideElementID("last_snapshot_div");
+            function closeSnapPreview() {
+                hideElementID("preview_snap_div");
             }
 
             /*
@@ -84,9 +84,7 @@
             }
 
             function takeSnapshot() {
-                var div = document.getElementById("last_snapshot_div");
-                var img = document.getElementById("last_snapshot_img");
-                sendTakeSnapshot(document.getElementById("snapshot_name").value, div, img);
+                sendTakeSnapshot(document.getElementById("snapshot_name").value);
             }
 
             function resetVidSettings() {
@@ -94,7 +92,17 @@
             }
 
             function resetSnapSettings() {
-                resetSettings('s', document.getElementById("snap_defaults_field"));
+                resetSettings('p', document.getElementById("snap_defaults_field"));
+            }
+
+            function showPreview(filetype, filename) {
+                if (filetype === 'p') {
+                    var img = document.getElementById("preview_snap_img");
+                    img.src = "/func/download?p=" + filename;
+                    showFlexElementID("preview_snap_div");
+                } else {
+                    console.log("Invalid preview type: " + filetype);
+                }
             }
         </script>
 
@@ -254,19 +262,19 @@
             <div class="inner_grid_main" id="snapshot_list_div" style="display: none">
             </div>
 
-            <!-- hidden inner grid with last snapshot -->
-            <div class="inner_grid_main" id="last_snapshot_div" style="display: none">
+            <!-- hidden inner grid with snapshot preview -->
+            <div class="inner_grid_main" id="preview_snap_div" style="display: none">
                 <div class="inner_grid_row">
                     <div class="grid_item_title">
-                        Last snapshot:
+                        Snapshot preview:
                     </div>
                     <div class="grid_item">
-                        <input type="button" value="Close" onclick="closeLastSnapshot()">
+                        <input type="button" value="Close" onclick="closeSnapPreview()">
                     </div>
                 </div>
                 <div class="inner_grid_row">
-                    <div class="grid_item" style="max-width: 400px">
-                        <img id="last_snapshot_img" width="400" src="#" alt="Last snapshot">
+                    <div class="grid_item" style="max-width: 600px">
+                        <img id="preview_snap_img" width="600" src="#" alt="Snapshot">
                     </div>
                 </div>
             </div>

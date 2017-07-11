@@ -70,21 +70,17 @@ public class Camera {
             copyThread = new Thread(() -> {
                 try {
                     byte[] buff = new byte[512];
-                    while (recording) {
-                        if (!recordProcess.isAlive()) {
-                            recording = false;
-                        } else {
-                            // copy some of the file
-                            int count = recordIn.read(buff);
+                    while (recording && recordProcess.isAlive()) {
+                        // copy some of the file
+                        int count = recordIn.read(buff);
 
-                            if (count == -1) {
-                                // end of file
-                                stop();
-                                break;
-                            }
-
-                            recordOut.write(buff, 0, count);
+                        if (count == -1) {
+                            // end of file
+                            stop();
+                            break;
                         }
+
+                        recordOut.write(buff, 0, count);
                     }
                     System.out.print("Flushing buffers...");
                     flushBuffers(recordIn, recordOut);
@@ -94,6 +90,9 @@ public class Camera {
                     e.printStackTrace();
                     stop();
                 } finally {
+                    // once this thread stops, we HAVE to mark as not recording
+                    recording = false;
+
                     close(recordIn);
                     close(recordOut);
                 }
@@ -199,7 +198,7 @@ public class Camera {
         return lastSnapshot;
     }
 
-    public boolean snapshotAvailable() {
+    public boolean currentSnapshotReady() {
         return lastSnapshot != null;
     }
 

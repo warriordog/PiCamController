@@ -42,6 +42,10 @@ function createFilelist(fileType, divName, categoryName) {
                         html += "</div>";
 
                         html += "<div class=\"grid_item\">";
+                        html += "<a href='#' onclick=\"showPreview('" + fileType+ "', '" + fileName + "')\">[Preview]</a>";
+                        html += "</div>";
+
+                        html += "<div class=\"grid_item\">";
                         html += "<a href='/func/download?" + fileType + "=" + fileName + "'>[Download]</a>";
                         html += "</div>";
 

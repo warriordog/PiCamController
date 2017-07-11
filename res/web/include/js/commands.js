@@ -14,12 +14,12 @@ function sendStopRecording() {
 }
 
 // take a snapshot
-function sendTakeSnapshot(name, div, img) {
+function sendTakeSnapshot(name) {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
         if (req.readyState === 4) {
             if (req.status === 200) {
-                loadSnap(div, img);
+                previewLastSnap();
             }
         }
     };
@@ -29,19 +29,19 @@ function sendTakeSnapshot(name, div, img) {
 
 var snapTries = 0;
 
-function loadSnap(div, img) {
+function previewLastSnap() {
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
         if (req.readyState === 4) {
             if (req.status === 200) {
-                div.style.display = "flex";
-                img.src = "/func/lastsnap?" + new Date().getTime();
+                showPreview('p', req.responseText);
 
                 snapTries = 0;
+            // not ready yet
             } else if (req.status === 202) {
-                // not ready yet
-                if (snapTries < 40) {
-                    window.setTimeout(loadSnap(div, img), 1000);
+                // try for 1 minute
+                if (snapTries < 60) {
+                    window.setTimeout(previewLastSnap(), 1000);
                     snapTries++;
                 } else {
                     console.log("Gave up trying to retrieve preview image");
@@ -50,8 +50,8 @@ function loadSnap(div, img) {
             }
         }
     };
-    req.open("GET", "/func/check_snap", true); // true for asynchronous
-    req.send(name);
+    req.open("GET", "/func/lastsnap", true); // true for asynchronous
+    req.send();
 }
 
 // exit program
