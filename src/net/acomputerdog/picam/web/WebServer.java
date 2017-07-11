@@ -31,7 +31,7 @@ public class WebServer {
             sendResponse("200 OK", 200, e);
             controller.shutdown();
         });
-        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.0.1", 200, e));
+        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.1.0", 200, e));
         server.createContext("/func/status", e -> {
             String resp = controller.getCamera(0).isRecording() ? "1" : "0";
             resp += "|";
