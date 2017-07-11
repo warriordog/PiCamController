@@ -6,12 +6,6 @@
         </title>
         <link rel="stylesheet" href="/include/css/common.css">
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <style>
-            .setting_label {
-                flex-grow: 1;
-                margin: 5px 0;
-            }
-        </style>
     </head>
     <body>
         <script type="text/javascript">
@@ -109,13 +103,20 @@
             }
         </script>
 
+        <!-- Main window grid -->
         <div class="grid_main">
-            <p class="warning_message" id="javascript_warning">
+
+            <!-- javascript warning message, removed if javascript loads -->
+            <div class="warning_message" id="javascript_warning">
                 This site requires javascript to work correctly.
-            </p>
+            </div>
+
+            <!-- banner that show version -->
             <h1 class="top_grid_row" id="controller_version">
                 Pi Camera Controller ???
             </h1>
+
+            <!-- First row, shows camera recording status -->
             <div class="grid_row">
                 <div class="grid_item" style="flex-grow: 1;">
                     Camera status:
@@ -126,18 +127,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Second row, recording buttons -->
             <div class="grid_row">
                 <div class="grid_item" style="flex-grow: 1;">
                     Record:
                 </div>
+                <!-- Record a video -->
                 <div class="grid_item">
                     <input type="button" id="record_button" value="Video" onclick="showStart()">
                 </div>
+                <!-- Record a snapshot -->
                 <div class="grid_item" id="show_snapshot_div">
                     <input type="button" id="show_snapshot_button" value="Snapshot" onclick="showSnapshot()">
                 </div>
             </div>
+
+            <!-- hidden inner grid, settings for recording video -->
             <div class="inner_grid_main" id="start_settings_div" style="display: none; justify-content: flex-start">
+                <!-- first row of hidden grid, title/record button -->
                 <div class="inner_grid_row">
                     <div class="grid_item" style="flex-grow: 1;">
                         Record video:
@@ -146,14 +154,16 @@
                         <input type="button" value="Start" onclick="startNow()">
                     </div>
                 </div>
+                <!-- second hidden row, duration setting -->
                 <div class="inner_grid_row" style="align-items: baseline">
                     <div class="grid_item" style="flex-grow: 1;">
-                        Record for:
+                        Duration:
                     </div>
                     <div class="grid_item">
                         <input type="text" id="record_time" value="0">
                     </div>
                 </div>
+                <!-- third hidden row, output filename -->
                 <div class="inner_grid_row" style="align-items: baseline">
                     <p class="grid_item" style="flex-grow: 1;">
                         Filename:
@@ -162,20 +172,25 @@
                         <input type="text" id="record_text" value="my_video">
                     </div>
                 </div>
+                <!-- fourth row, camera settings -->
                 <div class="inner_grid_row" style="align-items: baseline">
                     <p class="grid_item" style="flex-grow: 1;">
-                        Camera settings:
+                        Settings:
                     </p>
                     <div class="grid_item">
                         <input type="text" id="camera_settings" value="">
                     </div>
                 </div>
             </div>
+
+            <!-- hidden warning row, displayed if duration is not an integer -->
             <div class="grid_row" id="invalid_time_div" style="display: none; color: red;">
                 Please enter a number of seconds to record for, <br>
                 or enter 0 to record until canceled.<br>
                 <input type="button" value="Close" onclick="document.getElementById('invalid_time_div').style.display = 'none'">
             </div>
+
+            <!-- hidden row for recording progress -->
             <div class="grid_row" id="rec_progress_div" style="display: none">
                 <div class="grid_item">
                     Recording to:
@@ -191,7 +206,10 @@
                     N/A
                 </div>
             </div>
+
+            <!-- hidden inner grid for recording snapshots -->
             <div class="inner_grid_main" id="snapshot_div" style="display: none">
+                <!-- inner row with title / record button -->
                 <div class="inner_grid_row">
                     <div class="grid_item" style="flex-grow: 1;">
                         Record snapshot:
@@ -200,15 +218,18 @@
                         <input type="button" value="Save" onclick="snapshot()">
                     </div>
                 </div>
+                <!-- inner row with filename -->
                 <div class="inner_grid_row">
                     <div class="grid_item" style="flex-grow: 1;">
-                        File path:
+                        Filename:
                     </div>
                     <div class="grid_item">
                         <input type="text" id="snapshot_name" value="my_picture">
                     </div>
                 </div>
             </div>
+
+            <!-- row with file browser buttons -->
             <div class="grid_row">
                 <div class="grid_item" style="flex-grow: 1;">
                     Browse:
@@ -220,8 +241,12 @@
                     <input type="button" id="browse_snapshot_button" value="Snapshot" onclick="browseSnapshots()">
                 </div>
             </div>
+
+            <!-- hidden inner grid with video files - populated by JS -->
             <div class="inner_grid_main" id="video_list_div" style="display: none">
             </div>
+
+            <!-- hidden inner grid with snapshot files - populated by JS -->
             <div class="inner_grid_main" id="snapshot_list_div" style="display: none">
             </div>
         </div>
