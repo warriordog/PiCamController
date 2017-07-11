@@ -57,7 +57,9 @@
             }
 
             function snapshot() {
-                takeSnapshot(document.getElementById("snapshot_name").value);
+                var div = document.getElementById("last_snapshot_div");
+                var img = document.getElementById("last_snapshot_img");
+                takeSnapshot(document.getElementById("snapshot_name").value, div, img);
             }
 
             function showSnapshot() {
@@ -100,6 +102,10 @@
                     button.value = "Snapshot";
                     div.style.display = "none";
                 }
+            }
+
+            function closeLastSnapshot() {
+                document.getElementById("last_snapshot_div").style.display = "none";
             }
         </script>
 
@@ -248,6 +254,21 @@
 
             <!-- hidden inner grid with snapshot files - populated by JS -->
             <div class="inner_grid_main" id="snapshot_list_div" style="display: none">
+            </div>
+
+            <!-- hidden inner grid with last snapshot -->
+            <div class="inner_grid_main" id="last_snapshot_div" style="display: none">
+                <div class="inner_grid_row">
+                    <div class="grid_item" style="flex-grow: 1;">
+                        Last snapshot:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="closeLastSnapshot()">
+                    </div>
+                </div>
+                <div class="inner_grid_row">
+                    <img id="last_snapshot_img" src="#" alt="Last snapshot" style="max-width: 100%;">
+                </div>
             </div>
         </div>
 

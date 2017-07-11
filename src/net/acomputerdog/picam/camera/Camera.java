@@ -4,10 +4,7 @@ import net.acomputerdog.picam.PiCamController;
 import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +24,8 @@ public class Camera {
 
     private InputStream recordIn;
     private OutputStream recordOut;
+
+    private File lastSnapshot;
 
     public Camera(PiCamController controller, int cameraNumber) {
         this.controller = controller;
@@ -179,6 +178,7 @@ public class Camera {
                 System.out.print("Flushing buffers...");
                 flushBuffers(in, out);
                 System.out.println("done.");
+                lastSnapshot = file.getFile();
             } catch (IOException e) {
                 System.err.println("IO error while taking snapshot");
                 e.printStackTrace();
@@ -190,6 +190,16 @@ public class Camera {
         copyThread.setName("copy_thread");
         copyThread.setDaemon(false);
         copyThread.start();
+    }
+
+    public File takeLastSnapshot() {
+        File temp = lastSnapshot;
+        lastSnapshot = null;
+        return temp;
+    }
+
+    public boolean snapshotAvailable() {
+        return lastSnapshot != null;
     }
 
     private static void flushBuffers(InputStream in, OutputStream out) throws IOException {

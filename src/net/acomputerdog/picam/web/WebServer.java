@@ -97,13 +97,14 @@ public class WebServer {
                     String resourcePath = request.substring(eIdx + 1);
                     if (!resourcePath.contains("/") && !resourcePath.contains("\\")) {
                         File dir = null;
+                        String contentType = "";
 
                         if ("v".equals(resourceType)) {
                             dir = controller.getVidDir();
+                            contentType = "video/mp4";
                         } else if ("p".equals(resourceType)) {
                             dir = controller.getPicDir();
-                        } else {
-                            sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                            contentType = "image/jpeg";
                         }
 
                         if (dir != null) {
@@ -113,7 +114,7 @@ public class WebServer {
                                     InputStream in = new FileInputStream(file);
 
                                     e.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"" + resourcePath + "\"");
-                                    e.getResponseHeaders().add("Content-Type", "video/mp4");
+                                    e.getResponseHeaders().add("Content-Type", contentType);
 
                                     sendFile(e, in);
                                 } catch (FileNotFoundException ex) {
@@ -125,6 +126,8 @@ public class WebServer {
                             } else {
                                 sendResponse("404 Not Found: No file could be found by that name", 404, e);
                             }
+                        } else {
+                            sendResponse("400 Malformed Input: unknown resource type", 400, e);
                         }
                     } else {
                         sendResponse("400 Malformed Input: resource path is invalid", 400, e);
@@ -210,6 +213,27 @@ public class WebServer {
                 }
             } else {
                 sendResponse("405 Method Not Allowed: use POST", 405, e);
+            }
+        });
+        server.createContext("/func/lastsnap", e -> {
+            File snap = controller.getCamera(0).takeLastSnapshot();
+            if (snap != null && snap.exists()) {
+                try {
+                    InputStream in = new FileInputStream(snap);
+                    e.getResponseHeaders().add("Content-Type", "image/jpeg");
+                    sendFile(e, in);
+                } catch (FileNotFoundException ex) {
+                    sendResponse("404 Not Found: previous snapshot has been deleted.", 404, e);
+                }
+            } else {
+                sendResponse("503 Temporarily Unavailable: snapshot is not ready", 503, e);
+            }
+        });
+        server.createContext("/func/check_snap", e -> {
+            if (controller.getCamera(0).snapshotAvailable()) {
+                sendResponse("200 OK: Snapshot available", 200, e);
+            } else {
+                sendResponse("202 Accepted: waiting for snapshot", 202, e);
             }
         });
     }
