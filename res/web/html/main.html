@@ -9,32 +9,23 @@
     </head>
     <body>
         <script type="text/javascript">
-            function cancelRecord() {
-                document.getElementById("record_button").value = "Video";
+            function hideRecordSettings() {
                 document.getElementById("start_settings_div").style.display = "none";
+                document.getElementById("invalid_time_div").style.display = "none";
             }
 
-            function cancelSnap() {
-                document.getElementById("show_snapshot_button").value = "Snapshot";
+            function hideSnapSettings() {
                 document.getElementById("snapshot_div").style.display = "none";
             }
 
-            function showStart() {
-                var recButton = document.getElementById("record_button");
-                if (recButton.value === "Video") {
-                    recButton.value = "Cancel";
-                    document.getElementById("start_settings_div").style.display = "flex";
-                    document.getElementById("invalid_time_div").style.display = "none";
+            function showRecordSettings() {
+                document.getElementById("start_settings_div").style.display = "flex";
+                document.getElementById("invalid_time_div").style.display = "none";
 
-                    cancelSnap();
-                } else if (recButton.value === "Cancel") {
-                    cancelRecord()
-                } else { //stop
-                    stopRecording();
-                }
+                hideSnapSettings();
             }
 
-            function startNow() {
+            function startRecord() {
                 var time = document.getElementById("record_time").value;
                 var path = document.getElementById("record_text").value;
                 var settings = document.getElementById("camera_settings").value;
@@ -42,15 +33,9 @@
                 if (isNaN(time)) {
                     document.getElementById("invalid_time_div").style.display = "flex";
                 } else {
-                    document.getElementById("record_button").value = "Video";
-                    document.getElementById("start_settings_div").style.display = "none";
-                    //document.getElementById("start_button_div").style.display = "none";
-                    document.getElementById("invalid_time_div").style.display = "none";
-                    document.getElementById("record_button").value = "Stop";
-
-
-                    document.getElementById("show_snapshot_div").style.display = "none";
-                    document.getElementById("snapshot_div").style.display = "none";
+                    hideRecordSettings();
+                    hideSnapSettings();
+                    document.getElementById("record_row").style.display = "none";
 
                     startRecording(time, path, settings);
                 }
@@ -63,45 +48,21 @@
             }
 
             function showSnapshot() {
-                var snapButton = document.getElementById("show_snapshot_button");
-                if (snapButton.value === "Snapshot") {
-                    snapButton.value = "Cancel";
-                    document.getElementById("snapshot_div").style.display = "flex";
+                document.getElementById("snapshot_div").style.display = "flex";
 
-                    cancelRecord();
-                } else {
-                    cancelSnap();
-                }
+                hideRecordSettings();
             }
 
             function browseVideos() {
-                var button = document.getElementById("browse_vid_button");
-                var div = document.getElementById("video_list_div");
-
-                if (button.value === "Video") {
-                    button.value = "Close";
-                    div.style.display = "flex";
-
-                    createFilelist("v", "video_list_div", "Video");
-                } else {
-                    button.value = "Video";
-                    div.style.display = "none";
-                }
+                var divName = "video_list_div";
+                document.getElementById(divName).style.display = "flex";
+                createFilelist("v", divName, "Snapshot");
             }
 
             function browseSnapshots() {
-                var button = document.getElementById("browse_snapshot_button");
-                var div = document.getElementById("snapshot_list_div");
-
-                if (button.value === "Snapshot") {
-                    button.value = "Close";
-                    div.style.display = "flex";
-
-                    createFilelist("p", "snapshot_list_div", "Snapshot");
-                } else {
-                    button.value = "Snapshot";
-                    div.style.display = "none";
-                }
+                var divName = "snapshot_list_div";
+                document.getElementById(divName).style.display = "flex";
+                createFilelist("p", divName, "Snapshot");
             }
 
             function closeLastSnapshot() {
@@ -158,17 +119,17 @@
             </div>
 
             <!-- Second row, recording buttons -->
-            <div class="grid_row">
+            <div class="grid_row" id="record_row">
                 <div class="grid_item" style="flex-grow: 1;">
                     Record:
                 </div>
                 <!-- Record a video -->
                 <div class="grid_item">
-                    <input type="button" id="record_button" value="Video" onclick="showStart()">
+                    <input type="button" value="Video" onclick="showRecordSettings()">
                 </div>
-                <!-- Record a snapshot -->
-                <div class="grid_item" id="show_snapshot_div">
-                    <input type="button" id="show_snapshot_button" value="Snapshot" onclick="showSnapshot()">
+                <!-- Record a snapshot-->
+                <div class="grid_item">
+                    <input type="button" value="Snapshot" onclick="showSnapshot()">
                 </div>
             </div>
 
@@ -180,7 +141,10 @@
                         Record video:
                     </div>
                     <div class="grid_item">
-                        <input type="button" value="Start" onclick="startNow()">
+                        <input type="button" value="Start" onclick="startRecord()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Cancel" onclick="hideRecordSettings()">
                     </div>
                 </div>
                 <!-- second hidden row, duration setting -->
@@ -234,6 +198,9 @@
                 <div class="grid_item" id="recording_time">
                     N/A
                 </div>
+                <div class="grid_item">
+                    <input type="button" value="Stop" onclick="stopRecording()">
+                </div>
             </div>
 
             <!-- hidden inner grid for recording snapshots -->
@@ -245,6 +212,9 @@
                     </div>
                     <div class="grid_item">
                         <input type="button" value="Save" onclick="snapshot()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Cancel" onclick="hideSnapSettings()">
                     </div>
                 </div>
                 <!-- inner row with filename -->
@@ -264,10 +234,10 @@
                     Browse:
                 </div>
                 <div class="grid_item">
-                    <input type="button" id="browse_vid_button" value="Video" onclick="browseVideos()">
+                    <input type="button" value="Video" onclick="browseVideos()">
                 </div>
                 <div class="grid_item">
-                    <input type="button" id="browse_snapshot_button" value="Snapshot" onclick="browseSnapshots()">
+                    <input type="button" value="Snapshot" onclick="browseSnapshots()">
                 </div>
             </div>
 

@@ -12,3 +12,11 @@
         warningMessage.remove();
     }
 }
+
+function hideElementID(elementId) {
+    hideElement(document.getElementById(elementId));
+}
+
+function hideElement(element) {
+    element.style.display = "none";
+}

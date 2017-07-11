@@ -10,8 +10,13 @@ function createFilelist(fileType, divName, categoryName) {
                 var respArray = req.responseText.split("|");
 
                 var html = "";
-                html += "<div class=\"inner_grid_row\">";
+                html += "<div class='inner_grid_row' style='justify-content: flex-end'>";
+                html += "<div class='grid_item'>";
                 html += categoryName + " files:";
+                html += "</div>";
+                html += "<div class='grid_item'>";
+                html += "<input type='button' value='Close' onclick=\"hideElementID('" + divName + "')\">";
+                html += "</div>";
                 html += "</div>";
 
                 for (var i = 0; i < respArray.length; i++) {

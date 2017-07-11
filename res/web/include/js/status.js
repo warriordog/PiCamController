@@ -31,9 +31,7 @@ function updateLoop() {
     var progressDiv = document.getElementById("rec_progress_div");
     var pathDiv = document.getElementById("recording_path");
     var timeDiv = document.getElementById("recording_time");
-    var recordButton = document.getElementById("record_button");
-
-    var showSnapDiv = document.getElementById("show_snapshot_div");
+    var recordDiv = document.getElementById("record_row");
 
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
@@ -50,14 +48,13 @@ function updateLoop() {
                         timeDiv.innerHTML = (respArray[2] / 1000) + "s";
                         progressDiv.style.display = "flex";
                     } else {
-                        if (recordButton.value === "Stop") {
-                            recordButton.value = "Video";
-
-                            showSnapDiv.style.display = "flex";
+                        // if progress is visible, then we were recording
+                        if (progressDiv.style.display !== "none") {
+                            progressDiv.style.display = "none";
+                            recordDiv.style.display = "flex";
                         }
 
                         statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";
-                        progressDiv.style.display = "none";
                     }
                 } else {
                     console.debug("server returned invalid status array: wrong length");
