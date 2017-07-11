@@ -2,13 +2,13 @@ package net.acomputerdog.picam.camera;
 
 public class PicSettings extends Settings {
     // camera mode, 0 is auto
-    public final Setting camMode = new Setting(list, "md", 1);
+    public final Setting camMode = new Setting(list, "md", 2);
 
     // width of picture (limited by mode)
-    public final Setting width = new Setting(list, "w", 1920);
+    public final Setting width = new Setting(list, "w", 2592);
 
     // height of picture (limited by mode)
-    public final Setting height = new Setting(list, "h", 1080);
+    public final Setting height = new Setting(list, "h", 1944);
 
     // video stabilization
     public final ValuelessSetting stabilization = new ValuelessSetting(list, "vs", null);
@@ -21,4 +21,10 @@ public class PicSettings extends Settings {
 
     // exposure mode
     public final Setting exposure = new Setting(list, "ex", "antishake");
+
+    // JPG quality
+    public final Setting quality = new Setting(list, "q", "90");
+
+    // frameburst mode
+    public final ValuelessSetting frameburst = new ValuelessSetting(list, "bm", true);
 }

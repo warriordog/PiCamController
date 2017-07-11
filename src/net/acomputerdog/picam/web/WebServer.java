@@ -216,11 +216,12 @@ public class WebServer {
             }
         });
         server.createContext("/func/lastsnap", e -> {
-            File snap = controller.getCamera(0).takeLastSnapshot();
+            File snap = controller.getCamera(0).getLastSnapshot();
             if (snap != null && snap.exists()) {
                 try {
                     InputStream in = new FileInputStream(snap);
                     e.getResponseHeaders().add("Content-Type", "image/jpeg");
+                    e.getResponseHeaders().add("Cache-control", "no-cache");
                     sendFile(e, in);
                 } catch (FileNotFoundException ex) {
                     sendResponse("404 Not Found: previous snapshot has been deleted.", 404, e);

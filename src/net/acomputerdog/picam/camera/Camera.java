@@ -139,6 +139,9 @@ public class Camera {
     }
 
     public void takeSnapshot(JPGFile file) throws IOException {
+        // erase last snapshot
+        lastSnapshot = null;
+
         ProcessBuilder processBuilder = new ProcessBuilder();
 
         List<String> command = new ArrayList<>();
@@ -192,10 +195,8 @@ public class Camera {
         copyThread.start();
     }
 
-    public File takeLastSnapshot() {
-        File temp = lastSnapshot;
-        lastSnapshot = null;
-        return temp;
+    public File getLastSnapshot() {
+        return lastSnapshot;
     }
 
     public boolean snapshotAvailable() {

@@ -47,7 +47,7 @@ body {
 
 .inner_grid_row {
     border: none;
-    padding: 0 0 0 0;
+    padding: 2px 0;
 }
 
 .grid_item {

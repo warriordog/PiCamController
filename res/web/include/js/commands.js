@@ -35,14 +35,13 @@ function loadSnap(div, img) {
         if (req.readyState === 4) {
             if (req.status === 200) {
                 div.style.display = "flex";
-                img.src = "";
-                img.src = "/func/lastsnap";
+                img.src = "/func/lastsnap?" + new Date().getTime();
 
                 snapTries = 0;
             } else if (req.status === 202) {
                 // not ready yet
-                if (snapTries < 20) {
-                    window.setTimeout(loadSnap(div, img), 500);
+                if (snapTries < 40) {
+                    window.setTimeout(loadSnap(div, img), 1000);
                     snapTries++;
                 } else {
                     console.log("Gave up trying to retrieve preview image");
