@@ -95,3 +95,27 @@ function resetSettings(type, field) {
     req.open("GET", "/func/resetsettings?" + type, true); // true for asynchronous
     req.send();
 }
+
+var numGetPreviewTries = 0;
+
+// get preview URL and start previewing
+function getPreviewVideo() {
+    if (numGetPreviewTries < 15) {
+        numGetPreviewTries++;
+
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+                if (req.status === 200) {
+                    showPreview('v', req.responseText);
+                } else if (req.status === 202) {
+                    window.setTimeout(getPreviewVideo, 1000);
+                }
+            }
+        };
+        req.open("GET", "/func/getpreview", true); // true for asynchronous
+        req.send();
+    } else {
+        console.log("Gave up trying to preview video");
+    }
+}

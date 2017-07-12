@@ -116,7 +116,6 @@ public class Camera {
                     e.printStackTrace();
                     stop();
                 } finally {
-                    System.out.println("Record thread stopping");
                     // once this thread stops, we HAVE to mark as not recording
                     recording = false;
 
@@ -234,6 +233,10 @@ public class Camera {
 
     public void resetPicSettings() {
         picSettings = new PicSettings();
+    }
+
+    public NumberedFile getRecordingFile() {
+        return recordFile;
     }
 
     private static void flushBuffers(InputStream in, OutputStream out) throws IOException {

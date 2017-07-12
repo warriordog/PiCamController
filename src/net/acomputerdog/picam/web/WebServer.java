@@ -347,7 +347,7 @@ public class WebServer {
                                 System.err.println("IO error while sending file");
                                 ex.printStackTrace();
                             } finally {
-                                System.err.println("Done.");
+                                //System.err.println("Done.");
                                 if (streamIn != null) {
                                     streamIn.close();
                                 }
@@ -369,6 +369,18 @@ public class WebServer {
                     }
             } else {
                 sendResponse("405 Method Not Allowed: use GET", 405, e);
+            }
+        });
+        server.createContext("/func/getpreview", e -> {
+            if (controller.getCamera(0).isRecording()) {
+                File recFile = controller.getCamera(0).getRecordingFile().getFile();
+                if (recFile.exists()) {
+                    sendResponse(recFile.getName(), 200, e);
+                } else {
+                    sendResponse("202 Accepted: Waiting for record.", 202, e);
+                }
+            } else {
+                sendResponse("409 Conflict: Not recording.", 409, e);
             }
         });
     }

@@ -69,7 +69,7 @@
 
             function startRecord() {
                 var time = document.getElementById("record_time").value;
-                var path = document.getElementById("record_text").value;
+                var filename = document.getElementById("vid_filename").value;
                 var settings = document.getElementById("camera_settings").value;
 
                 if (isNaN(time)) {
@@ -79,7 +79,9 @@
                     hideSnapSettings();
                     hideElementID("record_row");
 
-                    sendStartRecording(time, path, settings);
+                    sendStartRecording(time, filename, settings);
+
+                    getPreviewVideo();
                 }
             }
 
@@ -185,7 +187,7 @@
                         Filename:
                     </p>
                     <div class="grid_item">
-                        <input type="text" id="record_text" value="my_video">
+                        <input type="text" id="vid_filename" value="my_video">
                     </div>
                 </div>
                 <!-- fourth row, camera settings -->
