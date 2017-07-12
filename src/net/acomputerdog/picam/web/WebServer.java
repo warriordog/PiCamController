@@ -3,11 +3,11 @@ package net.acomputerdog.picam.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
-import net.acomputerdog.picam.camera.Setting;
-import net.acomputerdog.picam.camera.Settings;
-import net.acomputerdog.picam.file.H264File;
+import net.acomputerdog.picam.camera.settings.Setting;
+import net.acomputerdog.picam.camera.settings.Settings;
 import net.acomputerdog.picam.file.JPGFile;
-import net.acomputerdog.picam.util.H264Converter;
+import net.acomputerdog.picam.file.MP4File;
+import net.acomputerdog.picam.util.MP4Converter;
 import net.acomputerdog.picam.util.OutputStreamSplitter;
 
 import java.io.*;
@@ -60,7 +60,7 @@ public class WebServer {
                             String[] settings = parts.length == 3 ? parts[2].split(" ") : new String[0];
 
                             controller.getCamera(0).getVidSettings().addSettingPairs(settings);
-                            controller.getCamera(0).recordFor(time, new H264File(controller.getVidDir(), fileName));
+                            controller.getCamera(0).recordFor(time, new MP4File(controller.getVidDir(), fileName));
 
                             sendResponse("200 OK", 200, e);
                         } catch (NumberFormatException ex) {
@@ -297,7 +297,7 @@ public class WebServer {
             }
 
         });
-        server.createContext("/func/stream", e -> {
+        server.createContext("/func/play", e -> {
             if ("GET".equals(e.getRequestMethod())) {
                 String request = e.getRequestURI().getQuery();
                     if (!request.contains("/") && !request.contains("\\")) {
@@ -309,13 +309,18 @@ public class WebServer {
                             OutputStream fileOut = null;
                             OutputStream streamOut = null;
                             try {
-                                if (streamFile.isFile()) {
-                                    System.err.println("Streaming from cache: " + request);
+
+                                if (vidFile.getName().endsWith("mp4")) {
+                                    //System.err.println("Streaming directly: " + request);
+                                    streamIn = new FileInputStream(vidFile);
+                                    fileOut = null;
+                                } else if (streamFile.isFile()) {
+                                    //System.err.println("Streaming from cache: " + request);
                                     streamIn = new FileInputStream(streamFile);
                                     fileOut = null;
                                 } else {
-                                    System.err.println("Streaming in realtime: " + request);
-                                    streamIn = new H264Converter(controller.getVidDir(), controller.getTmpDir(), request);
+                                    //System.err.println("Streaming from converter: " + request);
+                                    streamIn = new MP4Converter(controller.getVidDir(), controller.getTmpDir(), request);
                                     fileOut = new FileOutputStream(streamFile);
                                 }
 
@@ -333,9 +338,6 @@ public class WebServer {
                                 // H264 converter will always return at least 1 while process is active
                                 while (streamIn.available() > 0) {
                                     int count = streamIn.read(buff);
-                                    if (count != 512) {
-                                        System.err.println("Only read " + count + " bytes.");
-                                    }
 
                                     streamOut.write(buff, 0, count);
                                 }
