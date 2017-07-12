@@ -1,4 +1,4 @@
-package net.acomputerdog.picam.camera.settings;
+package net.acomputerdog.picam.camera;
 
 public class ValuelessSetting extends Setting {
     public ValuelessSetting(SettingsList settings, String name) {

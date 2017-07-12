@@ -7,11 +7,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MP4Converter extends InputStream {
+public class H264Converter extends InputStream {
     private final Process mp4box;
     private final InputStream mp4Stream;
 
-    public MP4Converter(File vidDir, File tmpDir, String vidName) throws IOException {
+    public H264Converter(File vidDir, File tmpDir, String vidName) throws IOException {
         File vidFile = new File(vidDir, vidName);
         File tmpFile = new File(tmpDir, vidName + ".tmp");
         if (tmpFile.exists() && !tmpFile.delete()) {

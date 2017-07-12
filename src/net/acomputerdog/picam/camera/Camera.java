@@ -1,11 +1,8 @@
 package net.acomputerdog.picam.camera;
 
 import net.acomputerdog.picam.PiCamController;
-import net.acomputerdog.picam.camera.settings.PicSettings;
-import net.acomputerdog.picam.camera.settings.VidSettings;
+import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
-import net.acomputerdog.picam.file.MP4File;
-import net.acomputerdog.picam.file.NumberedFile;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -21,10 +18,9 @@ public class Camera {
     private boolean recording = false;
     private long recordStart = 0;
 
-    private NumberedFile recordFile;
+    private H264File recordFile;
     private Thread copyThread;
-    private Process recordProc1;
-    private Process recordProc2;
+    private Process recordProcess;
 
     private InputStream recordIn;
     private OutputStream recordOut;
@@ -43,10 +39,10 @@ public class Camera {
     }
 
     public boolean isRecording() {
-        return recording && recordProc2.isAlive();
+        return recording && recordProcess != null && recordProcess.isAlive();
     }
 
-    public void recordFor(int time, MP4File videoFile) {
+    public void recordFor(int time, H264File videoFile) {
         if (recording) {
             System.out.println("Already recording");
         } else {
@@ -54,55 +50,33 @@ public class Camera {
             recordStart = System.currentTimeMillis();
             this.recordFile = videoFile;
 
-            List<String> cmd1 = new ArrayList<>();
-            cmd1.add("raspivid");
-            cmd1.add("-o");
-            cmd1.add("-");
-            cmd1.add("-t");
-            cmd1.add(String.valueOf(time));
-            cmd1.add("-n");
-            vidSettings.buildCommandLine(cmd1);
+            ProcessBuilder processBuilder = new ProcessBuilder();
 
-            List<String> cmd2 = new ArrayList<>();
-            cmd2.add("avconv");
-
-            cmd2.add("-framerate");
-            if (vidSettings.fps.isIncluded()) {
-                cmd2.add(vidSettings.fps.getValue());
-            } else {
-                cmd2.add("30");
-            }
-
-            cmd2.add("-i");
-            cmd2.add("-");
-            cmd2.add("-loglevel");
-            cmd2.add("panic");
-            cmd2.add("-c");
-            cmd2.add("copy");
-            cmd2.add(videoFile.getFile().getPath());
+            List<String> command = new ArrayList<>();
+            command.add("raspivid");
+            command.add("-o");
+            command.add("-");
+            command.add("-t");
+            command.add(String.valueOf(time));
+            command.add("-n");
+            vidSettings.buildCommandLine(command);
 
             //printList(command);
 
-            ProcessBuilder pb1 = new ProcessBuilder();
-            pb1.command(cmd1);
-            pb1.redirectOutput(ProcessBuilder.Redirect.PIPE);
-            pb1.redirectError(ProcessBuilder.Redirect.INHERIT);
-
-            ProcessBuilder pb2 = new ProcessBuilder();
-            pb2.command(cmd2);
-            pb2.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            pb2.redirectError(ProcessBuilder.Redirect.INHERIT);
-            pb2.redirectInput(ProcessBuilder.Redirect.PIPE);
+            processBuilder.command(command);
+            processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+            processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
             copyThread = new Thread(() -> {
                 try {
                     byte[] buff = new byte[512];
-                    while (recording && recordProc2.isAlive()) {
+                    while (recording && recordProcess.isAlive()) {
                         // copy some of the file
                         int count = recordIn.read(buff);
 
-                        // stop at end of stream
-                        if (count < 0) {
+                        if (count == -1) {
+                            // end of file
+                            stop();
                             break;
                         }
 
@@ -124,14 +98,14 @@ public class Camera {
                 }
             });
             copyThread.setName("record_thread");
-        copyThread.setDaemon(false);
+            copyThread.setDaemon(false);
+
 
             try {
-                recordProc1 = pb1.start();
-                recordProc2 = pb2.start();
+                recordProcess = processBuilder.start();
 
-                recordOut = recordProc2.getOutputStream();
-                recordIn = recordProc1.getInputStream();
+                recordOut = recordFile.getOutStream();
+                recordIn = recordProcess.getInputStream();
 
                 copyThread.start();
             } catch (IOException e) {
@@ -143,7 +117,8 @@ public class Camera {
     }
 
     public void stop() {
-        recordProc1.destroy();
+        recordProcess.destroy();
+        recording = false;
     }
 
     public long getRecordingTime() {
