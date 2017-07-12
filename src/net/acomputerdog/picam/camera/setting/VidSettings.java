@@ -1,4 +1,4 @@
-package net.acomputerdog.picam.camera;
+package net.acomputerdog.picam.camera.setting;
 
 public class VidSettings extends Settings {
     // camera mode, 0 is auto

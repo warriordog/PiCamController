@@ -1,4 +1,4 @@
-package net.acomputerdog.picam.camera;
+package net.acomputerdog.picam.camera.setting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 public class Settings {
     protected final SettingsList list = new SettingsList();
 
-    public void buildCommandLine(List<String> cmd) {
+    public void addToCommandLine(List<String> cmd) {
         for (Setting setting : list.getAllSettings()) {
             if (setting.isIncluded()) {
                 cmd.add("-" + setting.getKey());
@@ -18,9 +18,9 @@ public class Settings {
         }
     }
 
-    public String[] buildCommandLine() {
+    public String[] addToCommandLine() {
         List<String> cmd = new ArrayList<>();
-        buildCommandLine(cmd);
+        addToCommandLine(cmd);
         return cmd.toArray(new String[cmd.size()]);
     }
 

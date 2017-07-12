@@ -3,8 +3,8 @@ package net.acomputerdog.picam.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
-import net.acomputerdog.picam.camera.Setting;
-import net.acomputerdog.picam.camera.Settings;
+import net.acomputerdog.picam.camera.setting.Setting;
+import net.acomputerdog.picam.camera.setting.Settings;
 import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
 import net.acomputerdog.picam.util.H264Converter;
@@ -310,11 +310,11 @@ public class WebServer {
                             OutputStream streamOut = null;
                             try {
                                 if (streamFile.isFile()) {
-                                    System.err.println("Streaming from cache: " + request);
+                                    //System.err.println("Streaming from cache: " + request);
                                     streamIn = new FileInputStream(streamFile);
                                     fileOut = null;
                                 } else {
-                                    System.err.println("Streaming in realtime: " + request);
+                                    //System.err.println("Streaming in realtime: " + request);
                                     streamIn = new H264Converter(controller.getVidDir(), controller.getTmpDir(), request);
                                     fileOut = new FileOutputStream(streamFile);
                                 }
@@ -333,10 +333,6 @@ public class WebServer {
                                 // H264 converter will always return at least 1 while process is active
                                 while (streamIn.available() > 0) {
                                     int count = streamIn.read(buff);
-                                    if (count != 512) {
-                                        System.err.println("Only read " + count + " bytes.");
-                                    }
-
                                     streamOut.write(buff, 0, count);
                                 }
                             } catch (FileNotFoundException ex) {
@@ -345,7 +341,6 @@ public class WebServer {
                                 System.err.println("IO error while sending file");
                                 ex.printStackTrace();
                             } finally {
-                                System.err.println("Done.");
                                 if (streamIn != null) {
                                     streamIn.close();
                                 }

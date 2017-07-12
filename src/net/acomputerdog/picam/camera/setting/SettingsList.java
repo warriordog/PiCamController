@@ -1,4 +1,4 @@
-package net.acomputerdog.picam.camera;
+package net.acomputerdog.picam.camera.setting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
