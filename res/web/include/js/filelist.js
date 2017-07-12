@@ -27,7 +27,7 @@ function createFilelist(fileType, divName, categoryName) {
                         var fileSize = entryParts[1];
                         var fileTime = entryParts[2];
 
-                        html += "<div class=\"inner_grid_row\">";
+                        html += "<div class=\"inner_grid_row\" style='flex-wrap: nowrap'>";
 
                         html += "<div class=\"grid_item\" style='flex-grow: 1'>";
                         html += fileName;

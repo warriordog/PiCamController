@@ -7,6 +7,8 @@ import net.acomputerdog.picam.camera.Setting;
 import net.acomputerdog.picam.camera.Settings;
 import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
+import net.acomputerdog.picam.util.H264Converter;
+import net.acomputerdog.picam.util.OutputStreamSplitter;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -22,7 +24,7 @@ public class WebServer {
     public WebServer(PiCamController controller) throws IOException {
         this.controller = controller;
 
-        // who even knows what that 0 is for
+        // zero means "use system default value for maximum number of backlogged requests"
         this.server = HttpServer.create(new InetSocketAddress(8080), 0);
 
         server.createContext("/", e -> redirect("/html/main.html", e));
@@ -34,7 +36,7 @@ public class WebServer {
             sendResponse("200 OK", 200, e);
             controller.shutdown();
         });
-        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.1.0", 200, e));
+        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.2.0", 200, e));
         server.createContext("/func/status", e -> {
             String resp = controller.getCamera(0).isRecording() ? "1" : "0";
             resp += "|";
@@ -197,7 +199,18 @@ public class WebServer {
                             File file = new File(dir, path);
                             if (file.exists()) {
                                 if (file.delete()) {
-                                    sendResponse("200 OK", 200, e);
+                                    // cached streaming file
+                                    File streamFile = new File(controller.getStreamDir(), path + ".mp4");
+                                    if (streamFile.isFile()) {
+                                        if (streamFile.delete()) {
+                                            sendResponse("200 OK", 200, e);
+                                        } else {
+                                            System.out.printf("Unable to delete stream cache '%s'\n", file.getPath());
+                                            sendResponse("500 Internal Error: unable to cache file", 500, e);
+                                        }
+                                    } else {
+                                        sendResponse("200 OK", 200, e);
+                                    }
                                 } else {
                                     System.out.printf("Unable to delete file '%s'\n", file.getPath());
                                     sendResponse("500 Internal Error: unable to delete file", 500, e);
@@ -222,25 +235,9 @@ public class WebServer {
             if (controller.getCamera(0).currentSnapshotReady()) {
                 String snapName = controller.getCamera(0).getLastSnapshot().getName();
                 sendResponse(snapName, 200, e);
-                //sendResponse("200 OK: Snapshot available", 200, e);
             } else {
                 sendResponse("202 Accepted: waiting for snapshot", 202, e);
             }
-            /*
-            File snap = controller.getCamera(0).getLastSnapshot();
-            if (snap != null && snap.exists()) {
-                try {
-                    InputStream in = new FileInputStream(snap);
-                    e.getResponseHeaders().add("Content-Type", "image/jpeg");
-                    e.getResponseHeaders().add("Cache-control", "no-cache");
-                    sendFile(e, in);
-                } catch (FileNotFoundException ex) {
-                    sendResponse("404 Not Found: previous snapshot has been deleted.", 404, e);
-                }
-            } else {
-                sendResponse("503 Temporarily Unavailable: snapshot is not ready", 503, e);
-            }
-            */
         });
         server.createContext("/func/check_snap", e -> {
             if (controller.getCamera(0).currentSnapshotReady()) {
@@ -300,6 +297,78 @@ public class WebServer {
             }
 
         });
+        server.createContext("/func/stream", e -> {
+            if ("GET".equals(e.getRequestMethod())) {
+                String request = e.getRequestURI().getQuery();
+                    if (!request.contains("/") && !request.contains("\\")) {
+                        File vidFile = new File(controller.getVidDir(), request);
+                        if (vidFile.isFile()) {
+                            File streamFile = new File(controller.getStreamDir(), request + ".mp4");
+
+                            InputStream streamIn = null;
+                            OutputStream fileOut = null;
+                            OutputStream streamOut = null;
+                            try {
+                                if (streamFile.isFile()) {
+                                    System.err.println("Streaming from cache: " + request);
+                                    streamIn = new FileInputStream(streamFile);
+                                    fileOut = null;
+                                } else {
+                                    System.err.println("Streaming in realtime: " + request);
+                                    streamIn = new H264Converter(controller.getVidDir(), controller.getTmpDir(), request);
+                                    fileOut = new FileOutputStream(streamFile);
+                                }
+
+                                e.getResponseHeaders().add("Content-Disposition", "filename=\"" + request + "\"");
+                                e.getResponseHeaders().add("Content-Type", "video/mp4");
+                                e.sendResponseHeaders(200, 0); // chunked encoding, no size
+
+                                if (fileOut != null) {
+                                    streamOut = new OutputStreamSplitter(fileOut, e.getResponseBody());
+                                } else {
+                                    streamOut = e.getResponseBody();
+                                }
+
+                                byte[] buff = new byte[512];
+                                // H264 converter will always return at least 1 while process is active
+                                while (streamIn.available() > 0) {
+                                    int count = streamIn.read(buff);
+                                    if (count != 512) {
+                                        System.err.println("Only read " + count + " bytes.");
+                                    }
+
+                                    streamOut.write(buff, 0, count);
+                                }
+                            } catch (FileNotFoundException ex) {
+                                sendResponse("404 Not Found: Filesystem error", 404, e);
+                            } catch (IOException ex) {
+                                System.err.println("IO error while sending file");
+                                ex.printStackTrace();
+                            } finally {
+                                System.err.println("Done.");
+                                if (streamIn != null) {
+                                    streamIn.close();
+                                }
+                                if (streamOut != null) {
+                                    streamOut.flush();
+                                    streamOut.close();
+                                }
+                                if (fileOut != null) {
+                                    fileOut.flush();
+                                    fileOut.close();
+                                }
+                                e.close();
+                            }
+                        } else {
+                            sendResponse("404 Not Found: No file could be found by that name", 404, e);
+                        }
+                    } else {
+                        sendResponse("400 Malformed Input: resource path is invalid", 400, e);
+                    }
+            } else {
+                sendResponse("405 Method Not Allowed: use GET", 405, e);
+            }
+        });
     }
 
     public void start() {
@@ -333,8 +402,11 @@ public class WebServer {
                 int count = in.read(buff);
                 out.write(buff, 0, count);
             }
+        } catch (IOException e) {
+            System.err.println("IO error sending file: " + e.toString());
+        } finally {
+            exchange.close();
         }
-        exchange.close();
     }
 
     private void sendResponse(String response, int code, HttpExchange exchange) throws IOException {

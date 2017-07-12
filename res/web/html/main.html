@@ -99,10 +99,20 @@
                 if (filetype === 'p') {
                     var img = document.getElementById("preview_snap_img");
                     img.src = "/func/download?p=" + filename;
+
                     showFlexElementID("preview_snap_div");
+                } else if (filetype === 'v') {
+                    var vid = document.getElementById("preview_vid_img");
+                    vid.src = "/func/stream?" + filename;
+
+                    showFlexElementID("preview_vid_div");
                 } else {
                     console.log("Invalid preview type: " + filetype);
                 }
+            }
+
+            function closeVidPreview() {
+                hideElementID("preview_vid_div");
             }
         </script>
 
@@ -121,7 +131,7 @@
 
             <!-- First row, shows camera recording status -->
             <div class="grid_row">
-                <div class="grid_item_title">
+                <div class="grid_item_long">
                     Camera status:
                 </div>
                 <div class="grid_item" id="cam_status">
@@ -133,7 +143,7 @@
 
             <!-- Second row, recording buttons -->
             <div class="grid_row" id="record_row">
-                <div class="grid_item_title">
+                <div class="grid_item_long">
                     Record:
                 </div>
                 <!-- Record a video -->
@@ -256,6 +266,25 @@
 
             <!-- hidden inner grid with video files - populated by JS -->
             <div class="inner_grid_main" id="video_list_div" style="display: none">
+            </div>
+
+            <!-- hidden inner grid with video preview -->
+            <div class="inner_grid_main" id="preview_vid_div" style="display: none">
+                <div class="inner_grid_row">
+                    <div class="grid_item_title">
+                        Video preview:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="closeVidPreview()">
+                    </div>
+                </div>
+                <div class="inner_grid_row">
+                    <div class="grid_item" style="max-width: 600px">
+                        <video id="preview_vid_img" width="600" src="#" controls>
+                            Your browser does not support video playback.
+                        </video>
+                    </div>
+                </div>
             </div>
 
             <!-- hidden inner grid with snapshot files - populated by JS -->
