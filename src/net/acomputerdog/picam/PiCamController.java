@@ -145,6 +145,10 @@ public class PiCamController {
         return gson.toJson(config);
     }
 
+    public String getVersionString() {
+        return "Pi Camera Controller v0.3.0";
+    }
+
     public File getBaseDir() {
         return baseDir;
     }

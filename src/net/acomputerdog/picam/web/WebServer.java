@@ -34,7 +34,7 @@ public class WebServer {
         server.createContext("/include/", new WebFileHandler());
         server.createContext("/func/", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/exit", new BasicWebHandler(controller::shutdown));
-        server.createContext("/func/version", new SimpleWebHandler((h, ex) -> h.sendResponse("Pi Camera Controller v0.2.0", 200, ex)));
+        server.createContext("/func/version", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getVersionString(), 200, ex)));
         server.createContext("/func/status", new SimpleWebHandler((h, ex) -> {
             String resp = controller.getCamera(0).isRecording() ? "1" : "0";
             resp += "|";
