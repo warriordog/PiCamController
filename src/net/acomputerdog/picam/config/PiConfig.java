@@ -4,6 +4,8 @@ import net.acomputerdog.picam.system.net.WifiNetwork;
 
 public class PiConfig {
     public String baseDirectory;
+    public String rootFS;
+    public boolean readOnlyRoot;
 
     public boolean networkEnabled;
     public String wifiInterface;
@@ -14,7 +16,9 @@ public class PiConfig {
     public static PiConfig createDefault() {
         PiConfig cfg = new PiConfig();
         cfg.baseDirectory = "./";
+        cfg.rootFS = "/";
         cfg.networkEnabled = false;
+        cfg.readOnlyRoot = false;
         cfg.wifiInterface = "wlan0";
         cfg.primaryWifi = WifiNetwork.createDefault();
         cfg.secondaryWifi = WifiNetwork.createDefault();

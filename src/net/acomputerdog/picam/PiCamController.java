@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import net.acomputerdog.picam.camera.Camera;
 import net.acomputerdog.picam.config.PiConfig;
+import net.acomputerdog.picam.system.FileSystem;
 import net.acomputerdog.picam.system.net.Network;
 import net.acomputerdog.picam.web.WebServer;
 
@@ -18,6 +19,8 @@ public class PiCamController {
     private final File cfgFile;
     private final Gson gson;
     private final PiConfig config;
+
+    private final FileSystem fileSystem;
 
     private final Network network;
 
@@ -43,6 +46,8 @@ public class PiCamController {
             } catch (IOException e) {
                 throw new RuntimeException("IO error while loading config", e);
             }
+
+            this.fileSystem = new FileSystem(config);
 
             this.network = new Network(this);
 
@@ -137,6 +142,10 @@ public class PiCamController {
 
     public Network getNetwork() {
         return network;
+    }
+
+    public FileSystem getFS() {
+        return fileSystem;
     }
 
     public static void main(String[] args) {

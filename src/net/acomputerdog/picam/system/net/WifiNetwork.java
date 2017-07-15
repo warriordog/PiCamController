@@ -13,8 +13,8 @@ public class WifiNetwork {
 
     public static WifiNetwork createDefault() {
         WifiNetwork net = new WifiNetwork();
-        net.ssid = "PiCam";
-        net.passcode = "P1C@m";
+        net.ssid = "WifiName";
+        net.passcode = "WifiPassword";
         net.dhcpEnabled = true;
 
         // ignore rest because DHCP is on

@@ -43,6 +43,9 @@ public class Network {
     public void applyNetworkSettings() throws IOException {
         PiConfig config = controller.getConfig();
         if (config.networkEnabled) {
+            // enable write access
+            controller.getFS().mountRW();
+
             // shut off wifi
             Proc.execSync("sudo", "ifconfig", config.wifiInterface, "down");
 
@@ -54,6 +57,9 @@ public class Network {
 
             // turn on wifi
             Proc.execSync("sudo", "ifconfig", config.wifiInterface, "up");
+
+            // disable write access
+            controller.getFS().mountRO();
         }
     }
 
