@@ -21,6 +21,7 @@ public class PiCamController {
 
     private final Network network;
 
+    private final File baseDir;
     private final File vidDir;
     private final File picDir;
     private final File streamDir;
@@ -48,22 +49,27 @@ public class PiCamController {
             this.webServer = new WebServer(this);
             this.cameras = new Camera[]{new Camera(this, 0)};
 
-            vidDir = new File("./videos/");
+            baseDir = new File(config.baseDirectory);
+            if (!baseDir.isDirectory() && !baseDir.mkdir()) {
+                System.out.println("Unable to create base directory");
+            }
+
+            vidDir = new File(baseDir, "videos/");
             if (!vidDir.isDirectory() && !vidDir.mkdir()) {
                 System.out.println("Unable to create video directory");
             }
 
-            picDir = new File("./snapshots/");
+            picDir = new File(baseDir, "snapshots/");
             if (!picDir.isDirectory() && !picDir.mkdir()) {
                 System.out.println("Unable to create snapshot directory");
             }
 
-            streamDir = new File("./stream/");
+            streamDir = new File(baseDir, "stream/");
             if (!streamDir.isDirectory() && !streamDir.mkdir()) {
                 System.out.println("Unable to create stream directory");
             }
 
-            tmpDir = new File("./tmp/");
+            tmpDir = new File(baseDir, "tmp/");
             if (!tmpDir.isDirectory() && !tmpDir.mkdir()) {
                 System.out.println("Unable to create temp directory");
             }
@@ -103,6 +109,10 @@ public class PiCamController {
 
     public Camera getCamera(int num) {
         return cameras[num];
+    }
+
+    public File getBaseDir() {
+        return baseDir;
     }
 
     public File getVidDir() {
