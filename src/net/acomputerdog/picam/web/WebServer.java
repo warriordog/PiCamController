@@ -17,7 +17,6 @@ import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class WebServer {
     private final PiCamController controller;
@@ -29,30 +28,26 @@ public class WebServer {
         // zero means "use system default value for maximum number of backlogged requests"
         this.server = HttpServer.create(new InetSocketAddress(8080), 0);
 
-        server.createContext("/", e -> redirect("/html/main.html", e));
-        server.createContext("/html/", this::sendWebFile);
-        server.createContext("/img/", this::sendWebFile);
-        server.createContext("/include/", this::sendWebFile);
-        server.createContext("/func/", e -> sendResponse("404 Unknown function", 404, e));
-        server.createContext("/func/exit", e -> {
-            sendResponse("200 OK", 200, e);
-            controller.shutdown();
-        });
-        server.createContext("/func/version", e -> sendResponse("Pi Camera Controller v0.2.0", 200, e));
-        server.createContext("/func/status", e -> {
+        server.createContext("/", new SimpleWebHandler((h, ex) -> h.redirect("/html/main.html", ex)));
+        server.createContext("/html/", new WebFileHandler());
+        server.createContext("/img/", new WebFileHandler());
+        server.createContext("/include/", new WebFileHandler());
+        server.createContext("/func/", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/exit", new BasicWebHandler(controller::shutdown));
+        server.createContext("/func/version", new SimpleWebHandler((h, ex) -> h.sendResponse("Pi Camera Controller v0.2.0", 200, ex)));
+        server.createContext("/func/status", new SimpleWebHandler((h, ex) -> {
             String resp = controller.getCamera(0).isRecording() ? "1" : "0";
             resp += "|";
             resp += controller.getCamera(0).getRecordingPath();
             resp += "|";
             resp += controller.getCamera(0).getRecordingTime();
-            sendResponse(resp, 200, e);
-        });
-        server.createContext("/func/record", e -> {
-            if ("POST".equals(e.getRequestMethod())) {
+            h.sendResponse(resp, 200, ex);
+        }));
+        server.createContext("/func/record", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 if (!controller.getCamera(0).isRecording()) {
-                    String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
-
-                    String[] parts = request.split("\\|");
+                    String[] parts = postData.split("\\|");
                     if (parts.length == 2 || parts.length == 3) {
                         try {
                             int time = Integer.parseInt(parts[0]) * 1000;
@@ -75,33 +70,43 @@ public class WebServer {
                 } else {
                     sendResponse("409 Conflict: Already recording.", 409, e);
                 }
-            } else {
-                sendResponse("405 Method Not Allowed: use POST", 405, e);
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/record_stop", e -> {
-            sendResponse("200 OK", 200, e);
-            controller.getCamera(0).stop();
+        server.createContext("/func/record_stop", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                // don't use a simpler handler because this must be out of order
+                sendResponse("200 OK", 200, e);
+                controller.getCamera(0).stop();
+            }
         });
-        server.createContext("/func/snapshot", e -> {
-            if ("POST".equals(e.getRequestMethod())) {
-                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
-                String fileName = request.replace('.', '_').replace('/', '_').replace('~', '_');
+        server.createContext("/func/snapshot", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                String fileName = postData.replace('.', '_').replace('/', '_').replace('~', '_');
                 JPGFile file = new JPGFile(controller.getPicDir(), fileName);
                 controller.getCamera(0).takeSnapshot(file);
 
                 sendResponse("200 OK", 200, e);
-            } else {
-                sendResponse("405 Method Not Allowed: use POST", 405, e);
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/download", e -> {
-            if ("GET".equals(e.getRequestMethod())) {
-                String request = e.getRequestURI().getQuery();
-                int eIdx = request.indexOf('=');
-                if (eIdx > -1 && request.length() - eIdx > 1) {
-                    String resourceType = request.substring(0, eIdx);
-                    String resourcePath = request.substring(eIdx + 1);
+        server.createContext("/func/download", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                int eIdx = getData.indexOf('=');
+                if (eIdx > -1 && getData.length() - eIdx > 1) {
+                    String resourceType = getData.substring(0, eIdx);
+                    String resourcePath = getData.substring(eIdx + 1);
                     if (!resourcePath.contains("/") && !resourcePath.contains("\\")) {
                         File dir = null;
                         String contentType = "";
@@ -142,52 +147,57 @@ public class WebServer {
                 } else {
                     sendResponse("400 Malformed Input: resource type not specified", 400, e);
                 }
-            } else {
-                sendResponse("405 Method Not Allowed: use GET", 405, e);
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "GET".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/listfiles", e -> {
-            String request = e.getRequestURI().getQuery();
+        server.createContext("/func/listfiles", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
 
-            File dir = null;
-            if ("v".equals(request)) {
-                dir = controller.getVidDir();
-            } else if ("p".equals(request)) {
-                dir = controller.getPicDir();
-            }
-
-            if (dir != null) {
-                StringBuilder resp = new StringBuilder();
-
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                File[] files = dir.listFiles();
-                if (files != null) {
-                    // sort by modified time
-                    Arrays.sort(files, (o1, o2) -> (int) (o2.lastModified() - o1.lastModified()));
-
-                    for (int i = 0; i < files.length; i++) {
-                        if (i > 0) {
-                            resp.append('|');
-                        }
-                        File file = files[i];
-                        resp.append(file.getName());
-                        resp.append(',');
-                        resp.append(formatFileSize(file.length()));
-                        resp.append(',');
-                        resp.append(dateFormat.format(file.lastModified()));
-                    }
+                File dir = null;
+                if ("v".equals(getData)) {
+                    dir = controller.getVidDir();
+                } else if ("p".equals(getData)) {
+                    dir = controller.getPicDir();
                 }
-                sendResponse(resp.toString(), 200, e);
-            } else {
-                sendResponse("400 Malformed Input: missing arguments", 400, e);
+
+                if (dir != null) {
+                    StringBuilder resp = new StringBuilder();
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    File[] files = dir.listFiles();
+                    if (files != null) {
+                        // sort by modified time
+                        Arrays.sort(files, (o1, o2) -> (int) (o2.lastModified() - o1.lastModified()));
+
+                        for (int i = 0; i < files.length; i++) {
+                            if (i > 0) {
+                                resp.append('|');
+                            }
+                            File file = files[i];
+                            resp.append(file.getName());
+                            resp.append(',');
+                            resp.append(formatFileSize(file.length()));
+                            resp.append(',');
+                            resp.append(dateFormat.format(file.lastModified()));
+                        }
+                    }
+                    sendResponse(resp.toString(), 200, e);
+                } else {
+                    sendResponse("400 Malformed Input: missing arguments", 400, e);
+                }
             }
         });
-        server.createContext("/func/delete", e -> {
-            if ("POST".equals(e.getRequestMethod())) {
-                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
-                int split = request.indexOf('|');
-                if (split > 0 && request.length() - split > 1) {
-                    String type = request.substring(0, split);
+        server.createContext("/func/delete", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                int split = postData.indexOf('|');
+                if (split > 0 && postData.length() - split > 1) {
+                    String type = postData.substring(0, split);
                     File dir = null;
                     if ("v".equals(type)) {
                         dir = controller.getVidDir();
@@ -196,7 +206,7 @@ public class WebServer {
                     }
 
                     if (dir != null) {
-                        String path = request.substring(split + 1);
+                        String path = postData.substring(split + 1);
                         if (!path.contains("/") && !path.contains("\\")) {
                             File file = new File(dir, path);
                             if (file.exists()) {
@@ -229,242 +239,194 @@ public class WebServer {
                 } else {
                     sendResponse("400 Malformed Input: missing arguments", 400, e);
                 }
-            } else {
-                sendResponse("405 Method Not Allowed: use POST", 405, e);
-            }
-        });
-        server.createContext("/func/lastsnap", e -> {
-            if (controller.getCamera(0).currentSnapshotReady()) {
-                String snapName = controller.getCamera(0).getLastSnapshot().getName();
-                sendResponse(snapName, 200, e);
-            } else {
-                sendResponse("202 Accepted: waiting for snapshot", 202, e);
-            }
-        });
-        server.createContext("/func/check_snap", e -> {
-            if (controller.getCamera(0).currentSnapshotReady()) {
-                sendResponse("200 OK: Snapshot available", 200, e);
-            } else {
-                sendResponse("202 Accepted: waiting for snapshot", 202, e);
-            }
-        });
-        server.createContext("/func/reboot", e -> {
-            try {
-                Power.reboot();
-                sendResponse("200 OK", 200, e);
-            } catch (Exception ex) {
-                sendResponse("500 Intenal Server Error: failed to execute reboot command", 500, e);
-            }
-        });
-        server.createContext("/func/getsettings", e -> {
-            String req = e.getRequestURI().getQuery();
-
-            Settings settings = null;
-            if ("v".equals(req)) {
-                settings = controller.getCamera(0).getVidSettings();
-            } else if ("p".equals(req)) {
-                settings = controller.getCamera(0).getPicSettings();
             }
 
-            if (settings != null) {
-                StringBuilder builder = new StringBuilder();
-                List<Setting> allSettings = settings.getList().getAllSettings();
-                for (int i = 0; i < allSettings.size(); i++) {
-                    if (i > 0) {
-                        builder.append("|");
-                    }
-                    Setting setting = allSettings.get(i);
-                    builder.append(setting.getKey());
-                    builder.append("=");
-                    // an empty value means null
-                    if (setting.isIncluded()) {
-                        builder.append(setting.getValue());
-                    }
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "POST".equals(e.getRequestMethod());
+            }
+        });
+        server.createContext("/func/lastsnap", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                if (controller.getCamera(0).currentSnapshotReady()) {
+                    String snapName = controller.getCamera(0).getLastSnapshot().getName();
+                    sendResponse(snapName, 200, e);
+                } else {
+                    sendResponse("202 Accepted: waiting for snapshot", 202, e);
                 }
-                sendResponse(builder.toString(), 200, e);
-            } else {
-                sendResponse("400 Malformed Input: unknown resource type", 400, e);
             }
         });
-        server.createContext("/func/resetsettings", e -> {
-            String req = e.getRequestURI().getQuery();
-            if ("v".equals(req)) {
-                controller.getCamera(0).resetVidSettings();
-                sendResponse("200 OK", 200, e);
-            } else if ("p".equals(req)) {
-                controller.getCamera(0).resetPicSettings();
-                sendResponse("200 OK", 200, e);
-            } else {
-                sendResponse("400 Malformed Input: unknown resource type", 400, e);
+        server.createContext("/func/check_snap", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                if (controller.getCamera(0).currentSnapshotReady()) {
+                    sendResponse("200 OK: Snapshot available", 200, e);
+                } else {
+                    sendResponse("202 Accepted: waiting for snapshot", 202, e);
+                }
             }
-
         });
-        server.createContext("/func/stream", e -> {
-            if ("GET".equals(e.getRequestMethod())) {
-                String request = e.getRequestURI().getQuery();
-                    if (!request.contains("/") && !request.contains("\\")) {
-                        File vidFile = new File(controller.getVidDir(), request);
-                        if (vidFile.isFile()) {
-                            File streamFile = new File(controller.getStreamDir(), request + ".mp4");
+        server.createContext("/func/reboot", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                // don't use a simpler handler, because response must be sent before controller shuts down
+                sendResponse("200 OK", 200, e);
+                Power.reboot();
+                controller.shutdown();
+            }
+        });
+        server.createContext("/func/getsettings", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                Settings settings = null;
+                if ("v".equals(getData)) {
+                    settings = controller.getCamera(0).getVidSettings();
+                } else if ("p".equals(getData)) {
+                    settings = controller.getCamera(0).getPicSettings();
+                }
 
-                            InputStream streamIn = null;
-                            OutputStream fileOut = null;
-                            OutputStream streamOut = null;
-                            try {
-                                if (streamFile.isFile()) {
-                                    //System.err.println("Streaming from cache: " + request);
-                                    streamIn = new FileInputStream(streamFile);
-                                    fileOut = null;
-                                } else {
-                                    //System.err.println("Streaming in realtime: " + request);
-                                    streamIn = new H264Converter(controller.getVidDir(), controller.getTmpDir(), request);
-                                    fileOut = new FileOutputStream(streamFile);
-                                }
+                if (settings != null) {
+                    StringBuilder builder = new StringBuilder();
+                    List<Setting> allSettings = settings.getList().getAllSettings();
+                    for (int i = 0; i < allSettings.size(); i++) {
+                        if (i > 0) {
+                            builder.append("|");
+                        }
+                        Setting setting = allSettings.get(i);
+                        builder.append(setting.getKey());
+                        builder.append("=");
+                        // an empty value means null
+                        if (setting.isIncluded()) {
+                            builder.append(setting.getValue());
+                        }
+                    }
+                    sendResponse(builder.toString(), 200, e);
+                } else {
+                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                }
+            }
+        });
+        server.createContext("/func/resetsettings", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                if ("v".equals(getData)) {
+                    controller.getCamera(0).resetVidSettings();
+                    sendResponse("200 OK", 200, e);
+                } else if ("p".equals(getData)) {
+                    controller.getCamera(0).resetPicSettings();
+                    sendResponse("200 OK", 200, e);
+                } else {
+                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                }
+            }
+        });
+        server.createContext("/func/stream", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                if (!getData.contains("/") && !getData.contains("\\")) {
+                    File vidFile = new File(controller.getVidDir(), getData);
+                    if (vidFile.isFile()) {
+                        File streamFile = new File(controller.getStreamDir(), getData + ".mp4");
 
-                                e.getResponseHeaders().add("Content-Disposition", "filename=\"" + request + "\"");
-                                e.getResponseHeaders().add("Content-Type", "video/mp4");
-                                e.sendResponseHeaders(200, 0); // chunked encoding, no size
-
-                                if (fileOut != null) {
-                                    streamOut = new OutputStreamSplitter(fileOut, e.getResponseBody());
-                                } else {
-                                    streamOut = e.getResponseBody();
-                                }
-
-                                byte[] buff = new byte[512];
-                                // H264 converter will always return at least 1 while process is active
-                                while (streamIn.available() > 0) {
-                                    int count = streamIn.read(buff);
-                                    streamOut.write(buff, 0, count);
-                                }
-                            } catch (FileNotFoundException ex) {
-                                sendResponse("404 Not Found: Filesystem error", 404, e);
-                            } catch (IOException ex) {
-                                System.err.println("IO error while sending file");
-                                ex.printStackTrace();
-                            } finally {
-                                if (streamIn != null) {
-                                    streamIn.close();
-                                }
-                                if (streamOut != null) {
-                                    streamOut.flush();
-                                    streamOut.close();
-                                }
-                                if (fileOut != null) {
-                                    fileOut.flush();
-                                    fileOut.close();
-                                }
-                                e.close();
+                        InputStream streamIn = null;
+                        OutputStream fileOut = null;
+                        OutputStream streamOut = null;
+                        try {
+                            if (streamFile.isFile()) {
+                                //System.err.println("Streaming from cache: " + request);
+                                streamIn = new FileInputStream(streamFile);
+                                fileOut = null;
+                            } else {
+                                //System.err.println("Streaming in realtime: " + request);
+                                streamIn = new H264Converter(controller.getVidDir(), controller.getTmpDir(), getData);
+                                fileOut = new FileOutputStream(streamFile);
                             }
-                        } else {
-                            sendResponse("404 Not Found: No file could be found by that name", 404, e);
+
+                            e.getResponseHeaders().add("Content-Disposition", "filename=\"" + getData + "\"");
+                            e.getResponseHeaders().add("Content-Type", "video/mp4");
+                            e.sendResponseHeaders(200, 0); // chunked encoding, no size
+
+                            if (fileOut != null) {
+                                streamOut = new OutputStreamSplitter(fileOut, e.getResponseBody());
+                            } else {
+                                streamOut = e.getResponseBody();
+                            }
+
+                            byte[] buff = new byte[512];
+                            // H264 converter will always return at least 1 while process is active
+                            while (streamIn.available() > 0) {
+                                int count = streamIn.read(buff);
+                                streamOut.write(buff, 0, count);
+                            }
+                        } catch (FileNotFoundException ex) {
+                            sendResponse("404 Not Found: Filesystem error", 404, e);
+                        } catch (IOException ex) {
+                            System.err.println("IO error while sending file");
+                            ex.printStackTrace();
+                        } finally {
+                            if (streamIn != null) {
+                                streamIn.close();
+                            }
+                            if (streamOut != null) {
+                                streamOut.flush();
+                                streamOut.close();
+                            }
+                            if (fileOut != null) {
+                                fileOut.flush();
+                                fileOut.close();
+                            }
+                            e.close();
                         }
                     } else {
-                        sendResponse("400 Malformed Input: resource path is invalid", 400, e);
+                        sendResponse("404 Not Found: No file could be found by that name", 404, e);
                     }
-            } else {
-                sendResponse("405 Method Not Allowed: use GET", 405, e);
+                } else {
+                    sendResponse("400 Malformed Input: resource path is invalid", 400, e);
+                }
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "GET".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/shutdown", e -> {
-            try {
+        server.createContext("/func/shutdown", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                // don't use a simpler handler, because response must be sent first
+                sendResponse("200 OK", 200, e);
                 Power.shutdown();
-                sendResponse("200 OK", 200, e);
-            } catch (Exception ex) {
-                sendResponse("500 Internal Server Error: failed to execute shutdown command", 500, e);
+                controller.shutdown();
             }
         });
-        server.createContext("/func/netapply", e -> {
-            try {
-                controller.getNetwork().backupNetSettings();
-                controller.getNetwork().applyNetworkSettings();
-                sendResponse("200 OK", 200, e);
-            } catch (Exception ex) {
-                System.err.println("Exception while applying network settings");
-                ex.printStackTrace();
-                sendResponse("500 Internal Server Error: " + ex.toString(), 500, e);
-            }
-        });
-        server.createContext("/func/set_settings", e -> {
-            if ("POST".equals(e.getRequestMethod())) {
-                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
+        server.createContext("/func/netapply", new BasicWebHandler(() -> {
+            controller.getNetwork().backupNetSettings();
+            controller.getNetwork().applyNetworkSettings();
+        }));
+        server.createContext("/func/set_settings", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 try {
-                    controller.updateConfig(request);
+                    controller.updateConfig(postData);
                     sendResponse("200 OK", 200, e);
                 } catch (JsonSyntaxException ex) {
                     sendResponse("400 Malformed Input: invalid json: " + ex.getMessage(), 400, e);
                 }
-            } else {
-                sendResponse("405 Method Not Allowed: use POST", 405, e);
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/get_settings", e -> sendResponse(controller.getConfigJson(), 200, e));
-        server.createContext("/func/reset_settings", e -> {
-            controller.resetConfig();
-            sendResponse("200 OK", 200, e);
-        });
-        server.createContext("/func/save_settings", e -> {
-            try {
-                controller.saveConfig();
-                sendResponse("200 OK", 200, e);
-            } catch (IOException ex) {
-                sendResponse("500 Internal Server Error: " + ex.toString(), 500, e);
-            }
-        });
+        server.createContext("/func/get_settings", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getConfigJson(), 200, ex)));
+        server.createContext("/func/reset_settings", new BasicWebHandler(controller::resetConfig));
+        server.createContext("/func/save_settings", new BasicWebHandler(controller::saveConfig));
     }
 
     public void start() {
         server.start();
-    }
-
-    public void stop() {
-        // this may crash or hang
-        server.stop(0);
-    }
-
-    private void redirect(String path, HttpExchange exchange) throws IOException {
-        exchange.getResponseHeaders().add("Location", path);
-        sendResponse("308 Permanent Redirect", 308, exchange);
-    }
-
-    private void sendWebFile(HttpExchange exchange) throws IOException {
-        String fullPath = "/web" + exchange.getRequestURI().getPath().replace("..", "");
-        InputStream in = getClass().getResourceAsStream(fullPath);
-
-        if (in == null) {
-            sendResponse("404 not found", 404, exchange);
-        } else {
-            sendFile(exchange, in);
-        }
-    }
-
-    private void sendFile(HttpExchange exchange, InputStream in) throws IOException {
-        exchange.sendResponseHeaders(200, 0);
-        byte[] buff = new byte[64];
-
-        // autocloses out
-        try (OutputStream out = exchange.getResponseBody();) {
-
-            while (in.available() > 0) {
-                int count = in.read(buff);
-                out.write(buff, 0, count);
-            }
-        } catch (IOException e) {
-            System.err.println("IO error sending file: " + e.toString());
-        } finally {
-            exchange.close();
-        }
-    }
-
-    private void sendResponse(String response, int code, HttpExchange exchange) throws IOException {
-        byte[] bytes = response.getBytes();
-        exchange.sendResponseHeaders(code, bytes.length);
-        try {
-            exchange.getResponseBody().write(bytes);
-        } finally {
-            exchange.getResponseBody().close();
-            exchange.close();
-        }
     }
 
     private static String formatFileSize(long size) {
