@@ -58,8 +58,41 @@ public class Network {
     }
 
 
-    public void backupNetSettings() {
-        //TODO implement
+    public void backupNetSettings() throws IOException {
+        // make initial backup (if needed)
+        File origWPA = new File("/etc/wpa_supplicant/wpa_supplicant.conf.original");
+        if (!origWPA.exists()) {
+            if (!Proc.execCMD("sudo", "cp", "/etc/wpa_supplicant/wpa_supplicant.conf", origWPA.getAbsolutePath()).trim().isEmpty()) {
+                throw new RuntimeException("Unable to backup original WPA supplicant");
+            }
+        }
+
+        File origInt = new File("/etc/network/interfaces.original");
+        if (!origInt.exists()) {
+            if (!Proc.execCMD("sudo", "cp", "/etc/network/interfaces", origInt.getAbsolutePath()).trim().isEmpty()) {
+                throw new RuntimeException("Unable to backup original interfaces file");
+            }
+        }
+
+        File bakWPA = new File("/etc/wpa_supplicant/wpa_supplicant.conf.bak");
+        if (bakWPA.exists()) {
+            if (!Proc.execCMD("sudo", "rm", bakWPA.getAbsolutePath()).trim().isEmpty()) {
+                throw new RuntimeException("Unable to remove old backup of WPA supplicant");
+            }
+        }
+        if (!Proc.execCMD("sudo", "cp", "/etc/wpa_supplicant/wpa_supplicant.conf", bakWPA.getAbsolutePath()).trim().isEmpty()) {
+            throw new RuntimeException("Unable to backup WPA supplicant");
+        }
+
+        File bakInt = new File("/etc/network/interfaces.bak");
+        if (bakInt.exists()) {
+            if (!Proc.execCMD("sudo", "rm", bakInt.getAbsolutePath()).trim().isEmpty()) {
+                throw new RuntimeException("Unable to remove old backup of interfaces");
+            }
+        }
+        if (!Proc.execCMD("sudo", "cp", "/etc/network/interfaces", bakInt.getAbsolutePath()).trim().isEmpty()) {
+            throw new RuntimeException("Unable to backup interfaces");
+        }
     }
 
     private void setupWPA() {
