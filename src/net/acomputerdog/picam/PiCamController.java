@@ -99,10 +99,10 @@ public class PiCamController {
             this.fileSystem = new FileSystem(config);
             this.network = new Network(this);
 
-            if (this.webServer != null) {
-                webServer.stop();
+            // we can't restart the web server without causing the program to exit
+            if (this.webServer == null) {
+                this.webServer = new WebServer(this);
             }
-            this.webServer = new WebServer(this);
 
             if (cameras != null) {
                 for (Camera camera : cameras) {
