@@ -7,6 +7,7 @@ import net.acomputerdog.picam.camera.setting.Setting;
 import net.acomputerdog.picam.camera.setting.Settings;
 import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
+import net.acomputerdog.picam.system.Power;
 import net.acomputerdog.picam.util.H264Converter;
 import net.acomputerdog.picam.util.OutputStreamSplitter;
 
@@ -248,9 +249,9 @@ public class WebServer {
         });
         server.createContext("/func/reboot", e -> {
             try {
-                Runtime.getRuntime().exec("sudo reboot");
+                Power.reboot();
                 sendResponse("200 OK", 200, e);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 sendResponse("500 Intenal Server Error: failed to execute reboot command", 500, e);
             }
         });
@@ -362,6 +363,25 @@ public class WebServer {
                     }
             } else {
                 sendResponse("405 Method Not Allowed: use GET", 405, e);
+            }
+        });
+        server.createContext("/func/shutdown", e -> {
+            try {
+                Power.shutdown();
+                sendResponse("200 OK", 200, e);
+            } catch (Exception ex) {
+                sendResponse("500 Internal Server Error: failed to execute shutdown command", 500, e);
+            }
+        });
+        server.createContext("/func/netapply", e -> {
+            try {
+                controller.getNetwork().backupNetSettings();
+                controller.getNetwork().applyNetworkSettings();
+                sendResponse("200 OK", 200, e);
+            } catch (Exception ex) {
+                System.err.println("Exception while applying network settings");
+                ex.printStackTrace();
+                sendResponse("500 Internal Server Error: " + ex.toString(), 500, e);
             }
         });
     }
