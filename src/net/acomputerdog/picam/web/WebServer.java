@@ -1,5 +1,6 @@
 package net.acomputerdog.picam.web;
 
+import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
@@ -384,10 +385,41 @@ public class WebServer {
                 sendResponse("500 Internal Server Error: " + ex.toString(), 500, e);
             }
         });
+        server.createContext("/func/set_settings", e -> {
+            if ("POST".equals(e.getRequestMethod())) {
+                String request = new BufferedReader(new InputStreamReader(e.getRequestBody())).lines().collect(Collectors.joining());
+                try {
+                    controller.updateConfig(request);
+                    sendResponse("200 OK", 200, e);
+                } catch (JsonSyntaxException ex) {
+                    sendResponse("400 Malformed Input: invalid json: " + ex.getMessage(), 400, e);
+                }
+            } else {
+                sendResponse("405 Method Not Allowed: use POST", 405, e);
+            }
+        });
+        server.createContext("/func/get_settings", e -> sendResponse(controller.getConfigJson(), 200, e));
+        server.createContext("/func/reset_settings", e -> {
+            controller.resetConfig();
+            sendResponse("200 OK", 200, e);
+        });
+        server.createContext("/func/save_settings", e -> {
+            try {
+                controller.saveConfig();
+                sendResponse("200 OK", 200, e);
+            } catch (IOException ex) {
+                sendResponse("500 Internal Server Error: " + ex.toString(), 500, e);
+            }
+        });
     }
 
     public void start() {
         server.start();
+    }
+
+    public void stop() {
+        // this may crash or hang
+        server.stop(0);
     }
 
     private void redirect(String path, HttpExchange exchange) throws IOException {

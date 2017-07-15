@@ -13,22 +13,22 @@ import java.io.*;
 
 public class PiCamController {
 
-    private final WebServer webServer;
-    private final Camera[] cameras;
-
     private final File cfgFile;
     private final Gson gson;
-    private final PiConfig config;
 
-    private final FileSystem fileSystem;
+    private WebServer webServer;
+    private Camera[] cameras;
 
-    private final Network network;
+    private PiConfig config;
 
-    private final File baseDir;
-    private final File vidDir;
-    private final File picDir;
-    private final File streamDir;
-    private final File tmpDir;
+    private FileSystem fileSystem;
+    private Network network;
+
+    private File baseDir;
+    private File vidDir;
+    private File picDir;
+    private File streamDir;
+    private File tmpDir;
 
     private PiCamController() {
         try {
@@ -47,13 +47,30 @@ public class PiCamController {
                 throw new RuntimeException("IO error while loading config", e);
             }
 
-            this.fileSystem = new FileSystem(config);
+            readConfig();
+        } catch (Exception e) {
+            throw new RuntimeException("Exception setting up camera", e);
+        }
+    }
 
-            this.network = new Network(this);
+    private void start() {
+        webServer.start();
+        System.out.println("Started.");
+    }
 
-            this.webServer = new WebServer(this);
-            this.cameras = new Camera[]{new Camera(this, 0)};
+    public void shutdown() {
+        try {
+            System.out.println("Shutting down controller.");
+            saveConfig();
+        } catch (Exception e) {
+            System.err.println("Exception while shutting down");
+            e.printStackTrace();
+        }
+        System.exit(0);
+    }
 
+    private void readConfig() {
+        try {
             baseDir = new File(config.baseDirectory);
             if (!baseDir.isDirectory() && !baseDir.mkdir()) {
                 System.out.println("Unable to create base directory");
@@ -78,42 +95,54 @@ public class PiCamController {
             if (!tmpDir.isDirectory() && !tmpDir.mkdir()) {
                 System.out.println("Unable to create temp directory");
             }
+
+            this.fileSystem = new FileSystem(config);
+            this.network = new Network(this);
+
+            if (this.webServer != null) {
+                webServer.stop();
+            }
+            this.webServer = new WebServer(this);
+
+            if (cameras != null) {
+                for (Camera camera : cameras) {
+                    if (camera.isRecording()) {
+                        camera.stop();
+                    }
+                }
+            }
+            this.cameras = new Camera[]{new Camera(this, 0)};
         } catch (Exception e) {
-            throw new RuntimeException("Exception setting up camera", e);
+            throw new RuntimeException("Exception initializing components", e);
         }
     }
 
-    private void start() {
-        webServer.start();
-        System.out.println("Started.");
-    }
-
-    public void shutdown() {
-        try {
-            System.out.println("Shutting down controller.");
-            saveConfig();
-        } catch (Exception e) {
-            System.err.println("Exception while shutting down");
-            e.printStackTrace();
-        }
-        System.exit(0);
-    }
-
-    private void saveConfig() throws IOException {
+    public void saveConfig() throws IOException {
         try (Writer writer = new FileWriter(cfgFile)) {
             gson.toJson(config, writer);
         }
     }
 
     private void createDefaultConfig() throws IOException {
-        PiConfig def = PiConfig.createDefault();
-        try (Writer writer = new FileWriter(cfgFile)) {
-            gson.toJson(def, writer);
-        }
+        resetConfig();
+        saveConfig();
+    }
+
+    public void resetConfig() {
+        config = PiConfig.createDefault();
+    }
+
+    public void updateConfig(String json) {
+        config = gson.fromJson(json, PiConfig.class);
+        readConfig();
     }
 
     public Camera getCamera(int num) {
         return cameras[num];
+    }
+
+    public String getConfigJson() {
+        return gson.toJson(config);
     }
 
     public File getBaseDir() {
@@ -151,4 +180,5 @@ public class PiCamController {
     public static void main(String[] args) {
         new PiCamController().start();
     }
+
 }

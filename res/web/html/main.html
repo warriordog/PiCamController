@@ -37,10 +37,12 @@
             function showSettings() {
                 var vidSettings = document.getElementById("vid_defaults_field");
                 var snapSettings = document.getElementById("snap_defaults_field");
+                var configField = document.getElementById("picam_config_text");
 
                 showFlexElementID("settings_div");
                 populateSettings('v', vidSettings);
                 populateSettings('p', snapSettings);
+                getSettings(configField);
             }
 
             function hideSettings() {
@@ -113,6 +115,22 @@
 
             function closeVidPreview() {
                 hideElementID("preview_vid_div");
+            }
+
+            function resetPiCamConfig() {
+                var text = document.getElementById("picam_config_text");
+                text.value = "";
+                sendResetPiCamConfig(text);
+            }
+
+            function applyPiCamConfig() {
+                var text = document.getElementById("picam_config_text");
+                sendApplyPiCamConfig(text.value);
+            }
+
+            function savePiCamConfig() {
+                applyPiCamConfig();
+                sendSavePiCamConfig();
             }
         </script>
 
@@ -360,6 +378,29 @@
                     </div>
                     <div class="grid_item">
                         <input type="button" value="Reset" onclick="resetSnapSettings()">
+                    </div>
+                </div>
+                <!-- Empty divider row -->
+                <div class="inner_grid_row"></div>
+                <!-- Config header -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_title">
+                        PiCam config:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Reset" onclick="resetPiCamConfig()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Apply" onclick="applyPiCamConfig()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Save" onclick="savePiCamConfig()">
+                    </div>
+                </div>
+                <!-- Config file contents -->
+                <div class="inner_grid_row">
+                    <div class="grid_item">
+                        <textarea id="picam_config_text" cols="60" rows="20"></textarea>
                     </div>
                 </div>
             </div>

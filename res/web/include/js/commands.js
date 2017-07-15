@@ -61,6 +61,34 @@ function sendExitProgram() {
     req.send();
 }
 
+// resets settings and repopulates field
+function sendResetPiCamConfig(field) {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (req.readyState === 4) {
+            if (req.status === 200) {
+                getSettings(field);
+            }
+        }
+    };
+    req.open("GET", "/func/reset_settings", true); // true for asynchronous
+    req.send();
+}
+
+// activates PiCam config
+function sendApplyPiCamConfig(text) {
+    var req = new XMLHttpRequest();
+    req.open("POST", "/func/set_settings", true); // true for asynchronous
+    req.send(text);
+}
+
+// saves PiCam config
+function sendSavePiCamConfig(text) {
+    var req = new XMLHttpRequest();
+    req.open("POST", "/func/save_settings", true); // true for asynchronous
+    req.send(text);
+}
+
 // reboot pi
 function sendRebootSystem() {
     var req = new XMLHttpRequest();
@@ -93,5 +121,19 @@ function resetSettings(type, field) {
         }
     };
     req.open("GET", "/func/resetsettings?" + type, true); // true for asynchronous
+    req.send();
+}
+
+// populates settings into a field
+function getSettings(field) {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (req.readyState === 4) {
+            if (req.status === 200) {
+                field.value = req.responseText;
+            }
+        }
+    };
+    req.open("GET", "/func/get_settings", true); // true for asynchronous
     req.send();
 }
