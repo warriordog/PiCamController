@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import net.acomputerdog.picam.camera.Camera;
 import net.acomputerdog.picam.config.PiConfig;
+import net.acomputerdog.picam.gpio.GpioManager;
 import net.acomputerdog.picam.system.FileSystem;
 import net.acomputerdog.picam.system.net.Network;
 import net.acomputerdog.picam.web.WebServer;
@@ -31,6 +32,8 @@ public class PiCamController {
     private File picDir;
     private File streamDir;
     private File tmpDir;
+
+    private GpioManager gpio;
 
     private PiCamController(String configPath) {
         try {
@@ -75,6 +78,7 @@ public class PiCamController {
         try {
             System.out.println("Shutting down controller.");
             saveConfig();
+            gpio.shutdown();
         } catch (Exception e) {
             System.err.println("Exception while shutting down");
             e.printStackTrace();
@@ -124,6 +128,11 @@ public class PiCamController {
                 }
             }
             this.cameras = new Camera[]{new Camera(this, 0)};
+
+            if (gpio != null) {
+                gpio.shutdown();
+            }
+            gpio = new GpioManager(this);
         } catch (Exception e) {
             throw new RuntimeException("Exception initializing components", e);
         }

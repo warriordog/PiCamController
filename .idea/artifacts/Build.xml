@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact name="Build">
+    <output-path>$PROJECT_DIR$/out/artifacts/Build</output-path>
+    <root id="root">
+      <element id="artifact" artifact-name="PiCamController:jar" />
+      <element id="library" level="project" name="com.google.code.gson:gson:2.8.1" />
+    </root>
+  </artifact>
+</component>

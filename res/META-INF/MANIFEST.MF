@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
 Main-Class: net.acomputerdog.picam.PiCamController
-Class-Path: lib/gson.jar
+Class-Path: lib/gson.jar /opt/pi4j/lib/pi4j-core.jar

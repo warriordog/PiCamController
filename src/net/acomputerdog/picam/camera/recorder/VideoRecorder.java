@@ -98,8 +98,10 @@ public class VideoRecorder implements Recorder {
 
     @Override
     public void stop() {
-        recordProcess.destroy();
         recording = false;
+        if (recordProcess != null) {
+            recordProcess.destroy();
+        }
     }
 
     @Override
