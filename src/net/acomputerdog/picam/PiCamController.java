@@ -16,6 +16,8 @@ public class PiCamController {
     private final File cfgFile;
     private final Gson gson;
 
+    private final Thread shutdownHandler;
+
     private WebServer webServer;
     private Camera[] cameras;
 
@@ -48,6 +50,10 @@ public class PiCamController {
             }
 
             readConfig();
+
+            // shutdown handler to take care of exit tasks
+            this.shutdownHandler = new Thread(this::shutdown);
+            Runtime.getRuntime().addShutdownHook(shutdownHandler);
         } catch (Exception e) {
             throw new RuntimeException("Exception setting up camera", e);
         }
@@ -58,7 +64,14 @@ public class PiCamController {
         System.out.println("Started.");
     }
 
-    public void shutdown() {
+    public void exit() {
+        // don't cause shutdown to be called twice
+        Runtime.getRuntime().removeShutdownHook(shutdownHandler);
+        shutdown();
+        System.exit(0);
+    }
+
+    private void shutdown() {
         try {
             System.out.println("Shutting down controller.");
             saveConfig();
@@ -66,7 +79,6 @@ public class PiCamController {
             System.err.println("Exception while shutting down");
             e.printStackTrace();
         }
-        System.exit(0);
     }
 
     private void readConfig() {

@@ -37,7 +37,7 @@ public class WebServer {
         server.createContext("/img/", new WebFileHandler());
         server.createContext("/include/", new WebFileHandler());
         server.createContext("/func/", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
-        server.createContext("/func/exit", new BasicWebHandler(controller::shutdown));
+        server.createContext("/func/exit", new BasicWebHandler(controller::exit));
         server.createContext("/func/version", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getVersionString(), 200, ex)));
         server.createContext("/func/status", new SimpleWebHandler((h, ex) -> {
             String resp = controller.getCamera(0).isRecording() ? "1" : "0";
@@ -277,7 +277,7 @@ public class WebServer {
                 // don't use a simpler handler, because response must be sent before controller shuts down
                 sendResponse("200 OK", 200, e);
                 Power.reboot();
-                controller.shutdown();
+                controller.exit();
             }
         });
         server.createContext("/func/getsettings", new WebHandler() {
@@ -395,13 +395,13 @@ public class WebServer {
                 return "GET".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/shutdown", new WebHandler() {
+        server.createContext("/func/exit", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler, because response must be sent first
                 sendResponse("200 OK", 200, e);
                 Power.shutdown();
-                controller.shutdown();
+                controller.exit();
             }
         });
         server.createContext("/func/netapply", new BasicWebHandler(() -> {
