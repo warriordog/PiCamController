@@ -75,12 +75,22 @@ function sendResetPiCamConfig(field) {
     req.send();
 }
 
-// activates PiCam config
+// applies PiCam config
 function sendApplyPiCamConfig(text) {
     var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (req.readyState === 4) {
+            if (req.status === 200) {
+                var req2 = new XMLHttpRequest();
+                req2.open("GET", "/func/netapply", true); // true for asynchronous
+                req2.send();
+            }
+        }
+    };
     req.open("POST", "/func/set_settings", true); // true for asynchronous
     req.send(text);
 }
+
 
 // saves PiCam config
 function sendSavePiCamConfig(text) {
