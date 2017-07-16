@@ -158,7 +158,7 @@ public class PiCamController {
     }
 
     public String getVersionString() {
-        return "Pi Camera Controller v0.3.1";
+        return "Pi Camera Controller v0.3.2";
     }
 
     public File getBaseDir() {
