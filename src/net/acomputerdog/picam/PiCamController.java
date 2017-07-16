@@ -30,13 +30,13 @@ public class PiCamController {
     private File streamDir;
     private File tmpDir;
 
-    private PiCamController() {
+    private PiCamController(String configPath) {
         try {
             GsonBuilder builder = new GsonBuilder();
             builder.setPrettyPrinting();
             this.gson = builder.create();
 
-            this.cfgFile = new File("camera.cfg");
+            this.cfgFile = new File(configPath);
 
             if (!cfgFile.exists()) {
                 createDefaultConfig();
@@ -182,7 +182,10 @@ public class PiCamController {
     }
 
     public static void main(String[] args) {
-        new PiCamController().start();
+        String path = "camera.cfg";
+        if (args.length > 0) {
+            path = args[0];
+        }
+        new PiCamController(path).start();
     }
-
 }
