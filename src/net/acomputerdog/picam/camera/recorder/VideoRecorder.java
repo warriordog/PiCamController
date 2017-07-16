@@ -65,7 +65,6 @@ public class VideoRecorder implements Recorder {
                     e.printStackTrace();
                     stop();
                 } finally {
-                    System.out.println("Record thread stopping");
                     // once this thread stops, we HAVE to mark as not recording
                     recording = false;
 
