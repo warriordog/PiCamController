@@ -3,7 +3,6 @@
     <output-path>$PROJECT_DIR$/out/artifacts/</output-path>
     <root id="archive" name="PiCamController.jar">
       <element id="module-output" name="PiCamController" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.8.1/gson-2.8.1.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
