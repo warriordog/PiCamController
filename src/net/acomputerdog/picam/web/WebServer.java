@@ -11,6 +11,10 @@ import net.acomputerdog.picam.file.JPGFile;
 import net.acomputerdog.picam.system.Power;
 import net.acomputerdog.picam.util.H264Converter;
 import net.acomputerdog.picam.util.OutputStreamSplitter;
+import net.acomputerdog.picam.web.handler.BasicWebHandler;
+import net.acomputerdog.picam.web.handler.SimpleWebHandler;
+import net.acomputerdog.picam.web.handler.WebFileHandler;
+import net.acomputerdog.picam.web.handler.WebHandler;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -32,14 +36,38 @@ public class WebServer {
         // zero means "use system default value for maximum number of backlogged requests"
         this.server = HttpServer.create(new InetSocketAddress(8080), 0);
 
+        // web file handlers
         server.createContext("/", new SimpleWebHandler((h, ex) -> h.redirect("/html/main.html", ex)));
         server.createContext("/html/", new WebFileHandler());
         server.createContext("/img/", new WebFileHandler());
         server.createContext("/include/", new WebFileHandler());
+
+        // general functions
         server.createContext("/func/", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/exit", new BasicWebHandler(controller::exit));
         server.createContext("/func/version", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getVersionString(), 200, ex)));
-        server.createContext("/func/status", new SimpleWebHandler((h, ex) -> {
+        server.createContext("/func/reboot", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                // don't use a simpler handler, because response must be sent before controller shuts down
+                sendResponse("200 OK", 200, e);
+                Power.reboot();
+                controller.exit();
+            }
+        });
+        server.createContext("/func/exit", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                // don't use a simpler handler, because response must be sent first
+                sendResponse("200 OK", 200, e);
+                Power.shutdown();
+                controller.exit();
+            }
+        });
+
+        // recording functions
+        server.createContext("/func/record", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/record/status", new SimpleWebHandler((h, ex) -> {
             String resp = controller.getCamera(0).isRecording() ? "1" : "0";
             resp += "|";
             resp += controller.getCamera(0).getRecordingPath();
@@ -47,20 +75,16 @@ public class WebServer {
             resp += controller.getCamera(0).getRecordingTime();
             h.sendResponse(resp, 200, ex);
         }));
-        server.createContext("/func/record", new WebHandler() {
+        server.createContext("/func/record/video", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 if (!controller.getCamera(0).isRecording()) {
                     String[] parts = postData.split("\\|");
-                    if (parts.length == 2 || parts.length == 3) {
+                    if (parts.length == 2) {
                         try {
                             int time = Integer.parseInt(parts[0]) * 1000;
                             String fileName = parts[1].replace('.', '_').replace('/', '_').replace('~', '_');
 
-                            // workaround for bug where a string that ends with a delimiter is not properly split
-                            String[] settings = parts.length == 3 ? parts[2].split(" ") : new String[0];
-
-                            controller.getCamera(0).getVidSettings().addSettingPairs(settings);
                             controller.getCamera(0).recordFor(time, new H264File(controller.getVidDir(), fileName));
 
                             sendResponse("200 OK", 200, e);
@@ -81,7 +105,7 @@ public class WebServer {
                 return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/record_stop", new WebHandler() {
+        server.createContext("/func/record/stop", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler because this must be out of order
@@ -89,7 +113,7 @@ public class WebServer {
                 controller.getCamera(0).stop();
             }
         });
-        server.createContext("/func/snapshot", new WebHandler() {
+        server.createContext("/func/record/snapshot", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 String fileName = postData.replace('.', '_').replace('/', '_').replace('~', '_');
@@ -104,7 +128,10 @@ public class WebServer {
                 return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/download", new WebHandler() {
+
+        // media settings
+        server.createContext("/func/media", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/media/download", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 int eIdx = getData.indexOf('=');
@@ -158,7 +185,7 @@ public class WebServer {
                 return "GET".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/listfiles", new WebHandler() {
+        server.createContext("/func/media/list", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
 
@@ -196,7 +223,7 @@ public class WebServer {
                 }
             }
         });
-        server.createContext("/func/delete", new WebHandler() {
+        server.createContext("/func/media/delete", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 int split = postData.indexOf('|');
@@ -250,7 +277,7 @@ public class WebServer {
                 return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/lastsnap", new WebHandler() {
+        server.createContext("/func/media/lastsnap", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 if (controller.getCamera(0).currentSnapshotReady()) {
@@ -261,71 +288,7 @@ public class WebServer {
                 }
             }
         });
-        server.createContext("/func/check_snap", new WebHandler() {
-            @Override
-            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-                if (controller.getCamera(0).currentSnapshotReady()) {
-                    sendResponse("200 OK: Snapshot available", 200, e);
-                } else {
-                    sendResponse("202 Accepted: waiting for snapshot", 202, e);
-                }
-            }
-        });
-        server.createContext("/func/reboot", new WebHandler() {
-            @Override
-            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-                // don't use a simpler handler, because response must be sent before controller shuts down
-                sendResponse("200 OK", 200, e);
-                Power.reboot();
-                controller.exit();
-            }
-        });
-        server.createContext("/func/getsettings", new WebHandler() {
-            @Override
-            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-                Settings settings = null;
-                if ("v".equals(getData)) {
-                    settings = controller.getCamera(0).getVidSettings();
-                } else if ("p".equals(getData)) {
-                    settings = controller.getCamera(0).getPicSettings();
-                }
-
-                if (settings != null) {
-                    StringBuilder builder = new StringBuilder();
-                    List<Setting> allSettings = settings.getList().getAllSettings();
-                    for (int i = 0; i < allSettings.size(); i++) {
-                        if (i > 0) {
-                            builder.append("|");
-                        }
-                        Setting setting = allSettings.get(i);
-                        builder.append(setting.getKey());
-                        builder.append("=");
-                        // an empty value means null
-                        if (setting.isIncluded()) {
-                            builder.append(setting.getValue());
-                        }
-                    }
-                    sendResponse(builder.toString(), 200, e);
-                } else {
-                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
-                }
-            }
-        });
-        server.createContext("/func/resetsettings", new WebHandler() {
-            @Override
-            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-                if ("v".equals(getData)) {
-                    controller.getCamera(0).resetVidSettings();
-                    sendResponse("200 OK", 200, e);
-                } else if ("p".equals(getData)) {
-                    controller.getCamera(0).resetPicSettings();
-                    sendResponse("200 OK", 200, e);
-                } else {
-                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
-                }
-            }
-        });
-        server.createContext("/func/stream", new WebHandler() {
+        server.createContext("/func/media/stream", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 if (!getData.contains("/") && !getData.contains("\\")) {
@@ -395,20 +358,89 @@ public class WebServer {
                 return "GET".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/exit", new WebHandler() {
+
+        // settings and config
+        server.createContext("/func/settings", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        // camera settings
+        server.createContext("/func/settings/camera", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/settings/camera/get", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-                // don't use a simpler handler, because response must be sent first
-                sendResponse("200 OK", 200, e);
-                Power.shutdown();
-                controller.exit();
+                Settings settings = null;
+                if ("v".equals(getData)) {
+                    settings = controller.getCamera(0).getVidSettings();
+                } else if ("p".equals(getData)) {
+                    settings = controller.getCamera(0).getPicSettings();
+                }
+
+                if (settings != null) {
+                    StringBuilder builder = new StringBuilder();
+                    List<Setting> allSettings = settings.getList().getAllSettings();
+                    for (int i = 0; i < allSettings.size(); i++) {
+                        if (i > 0) {
+                            builder.append("|");
+                        }
+                        Setting setting = allSettings.get(i);
+                        builder.append(setting.getKey());
+                        builder.append("=");
+                        // an empty value means null
+                        if (setting.isIncluded()) {
+                            builder.append(setting.getValue());
+                        }
+                    }
+                    sendResponse(builder.toString(), 200, e);
+                } else {
+                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                }
             }
         });
-        server.createContext("/func/netapply", new BasicWebHandler(() -> {
+        server.createContext("/func/settings/camera/set", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                int split = postData.indexOf('&');
+                if (split > 0 && postData.length() - split > 1) {
+
+                    String type = postData.substring(0, split);
+                    if ("v".equals(type)) {
+                        controller.getCamera(0).getVidSettings().addSettingPairs(postData.substring(split + 1).split(" "));
+                        sendResponse("200 OK", 200, e);
+                    } else if ("p".equals(type)) {
+                        controller.getCamera(0).getPicSettings().addSettingPairs(postData.substring(split + 1).split(" "));
+                        sendResponse("200 OK", 200, e);
+                    } else {
+                        sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                    }
+                }
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "POST".equals(e.getRequestMethod());
+            }
+        });
+        server.createContext("/func/settings/camera/reset", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                if ("v".equals(getData)) {
+                    controller.getCamera(0).resetVidSettings();
+                    sendResponse("200 OK", 200, e);
+                } else if ("p".equals(getData)) {
+                    controller.getCamera(0).resetPicSettings();
+                    sendResponse("200 OK", 200, e);
+                } else {
+                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                }
+            }
+        });
+        //TODO find or add camera "set" function
+
+        // system settings
+        server.createContext("/func/settings/system", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/settings/system/apply", new BasicWebHandler(() -> {
             controller.getNetwork().backupNetSettings();
             controller.getNetwork().applyNetworkSettings();
         }));
-        server.createContext("/func/set_settings", new WebHandler() {
+        server.createContext("/func/settings/system/set", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 try {
@@ -424,10 +456,13 @@ public class WebServer {
                 return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/get_settings", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getConfigJson(), 200, ex)));
-        server.createContext("/func/reset_settings", new BasicWebHandler(controller::resetConfig));
-        server.createContext("/func/save_settings", new BasicWebHandler(controller::saveConfig));
-        server.createContext("/func/speedtest", new WebHandler() {
+        server.createContext("/func/settings/system/get", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getConfigJson(), 200, ex)));
+        server.createContext("/func/settings/system/reset", new BasicWebHandler(controller::resetConfig));
+        server.createContext("/func/settings/system/save", new BasicWebHandler(controller::saveConfig));
+
+        // debug functions
+        server.createContext("/func/debug", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/debug/speedtest", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 int size = 64;

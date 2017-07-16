@@ -46,7 +46,7 @@ function createFilelist(fileType, divName, categoryName) {
                         html += "</div>";
 
                         html += "<div class=\"grid_item\">";
-                        html += "<a href='/func/download?" + fileType + "=" + fileName + "'>[Download]</a>";
+                        html += "<a href='/func/media/download?" + fileType + "=" + fileName + "'>[Download]</a>";
                         html += "</div>";
 
                         html += "<div class=\"grid_item\">";
@@ -63,7 +63,7 @@ function createFilelist(fileType, divName, categoryName) {
             }
         }
     };
-    req.open("GET", "/func/listfiles?" + fileType, true); // true for asynchronous
+    req.open("GET", "/func/media/list?" + fileType, true); // true for asynchronous
     req.send();
 }
 
@@ -82,6 +82,6 @@ function deleteFile(fileType, fileName, divName, categoryName) {
             }
         }
     };
-    req.open("POST", "/func/delete", true); // true for asynchronous
+    req.open("POST", "/func/media/delete", true); // true for asynchronous
     req.send(fileType + "|" + fileName);
 }

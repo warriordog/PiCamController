@@ -60,7 +60,7 @@ function updateLoop() {
             updateLoopTimer = window.setTimeout(updateLoop, updateLoopInterval);
         }
     };
-    req.open("GET", "/func/status", true); // true for asynchronous
+    req.open("GET", "/func/record/status", true); // true for asynchronous
     req.send();
 }
 

@@ -40,9 +40,9 @@
                 var configField = document.getElementById("picam_config_text");
 
                 showFlexElementID("settings_div");
-                populateSettings('v', vidSettings);
-                populateSettings('p', snapSettings);
-                getSettings(configField);
+                populateCamSettings('v', vidSettings);
+                populateCamSettings('p', snapSettings);
+                getSystemSettings(configField);
             }
 
             function hideSettings() {
@@ -72,7 +72,6 @@
             function startRecord() {
                 var time = document.getElementById("record_time").value;
                 var path = document.getElementById("record_text").value;
-                var settings = document.getElementById("camera_settings").value;
 
                 if (isNaN(time)) {
                     showFlexElementID("invalid_time_div");
@@ -81,7 +80,7 @@
                     hideSnapSettings();
                     hideElementID("record_row");
 
-                    sendStartRecording(time, path, settings);
+                    sendStartRecording(time, path);
                 }
             }
 
@@ -90,22 +89,22 @@
             }
 
             function resetVidSettings() {
-                resetSettings('v', document.getElementById("vid_defaults_field"));
+                resetCamSettings('v', document.getElementById("vid_defaults_field"));
             }
 
             function resetSnapSettings() {
-                resetSettings('p', document.getElementById("snap_defaults_field"));
+                resetCamSettings('p', document.getElementById("snap_defaults_field"));
             }
 
             function showPreview(filetype, filename) {
                 if (filetype === 'p') {
                     var img = document.getElementById("preview_snap_img");
-                    img.src = "/func/download?p=" + filename;
+                    img.src = "/func/media/download?p=" + filename;
 
                     showFlexElementID("preview_snap_div");
                 } else if (filetype === 'v') {
                     var vid = document.getElementById("preview_vid_img");
-                    vid.src = "/func/stream?" + filename;
+                    vid.src = "/func/media/stream?" + filename;
 
                     showFlexElementID("preview_vid_div");
                 } else {
@@ -120,17 +119,27 @@
             function resetPiCamConfig() {
                 var text = document.getElementById("picam_config_text");
                 text.value = "";
-                sendResetPiCamConfig(text);
+                sendResetSystemSettings(text);
             }
 
             function applyPiCamConfig() {
                 var text = document.getElementById("picam_config_text");
-                sendApplyPiCamConfig(text.value);
+                sendApplySystemSettings(text.value);
             }
 
             function savePiCamConfig() {
                 applyPiCamConfig();
-                sendSavePiCamConfig();
+                sendSaveSystemSettings();
+            }
+
+            function saveVidSettings() {
+                var field = document.getElementById("vid_defaults_field");
+                sendSaveCamSettings('v', field.value);
+            }
+
+            function saveSnapSettings() {
+                var field = document.getElementById("snap_defaults_field");
+                sendSaveCamSettings('p', field.value);
             }
         </script>
 
@@ -204,15 +213,6 @@
                     </p>
                     <div class="grid_item">
                         <input type="text" id="record_text" value="my_video">
-                    </div>
-                </div>
-                <!-- fourth row, camera settings -->
-                <div class="inner_grid_row" style="align-items: baseline">
-                    <p class="grid_item_long">
-                        Settings:
-                    </p>
-                    <div class="grid_item">
-                        <input type="text" id="camera_settings" value="">
                     </div>
                 </div>
             </div>
@@ -365,6 +365,9 @@
                         <input type="text" id="vid_defaults_field" value="">
                     </div>
                     <div class="grid_item">
+                        <input type="button" value="Save" onclick="saveVidSettings()">
+                    </div>
+                    <div class="grid_item">
                         <input type="button" value="Reset" onclick="resetVidSettings()">
                     </div>
                 </div>
@@ -377,6 +380,9 @@
                         <input type="text" id="snap_defaults_field" value="">
                     </div>
                     <div class="grid_item">
+                        <input type="button" value="Save" onclick="saveSnapSettings()">
+                    </div>
+                    <div class="grid_item">
                         <input type="button" value="Reset" onclick="resetSnapSettings()">
                     </div>
                 </div>
@@ -386,19 +392,19 @@
                         Speed test:
                     </div>
                     <div class="grid_item">
-                        <a href="/func/speedtest?1">XS</a>
+                        <a href="/func/debug/speedtest?1">XS</a>
                     </div>
                     <div class="grid_item">
-                        <a href="/func/speedtest?64">S</a>
+                        <a href="/func/debug/speedtest?64">S</a>
                     </div>
                     <div class="grid_item">
-                        <a href="/func/speedtest?128">M</a>
+                        <a href="/func/debug/speedtest?128">M</a>
                     </div>
                     <div class="grid_item">
-                        <a href="/func/speedtest?256">L</a>
+                        <a href="/func/debug/speedtest?256">L</a>
                     </div>
                     <div class="grid_item">
-                        <a href="/func/speedtest?1024">XL</a>
+                        <a href="/func/debug/speedtest?1024">XL</a>
                     </div>
                 </div>
                 <!-- Empty divider row -->

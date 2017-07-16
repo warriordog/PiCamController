@@ -29,9 +29,22 @@ public class Settings {
             int split = pair.indexOf('=');
             String key;
             String val;
-            if (split > -1 && pair.length() - split > 1) {
-                key = pair.substring(0, split);
-                val = pair.substring(split + 1);
+            if (split > -1) {
+                // key and value
+                if (pair.length() - split > 1) {
+                    key = pair.substring(0, split);
+                    val = pair.substring(split + 1);
+                // key with no value, but still an '='
+                } else if (pair.length() > 1) {
+                    // delete trailing eq
+                    key = pair.substring(0, pair.length() - 1);
+                    val = null;
+                // just a value, which not supported
+                } else {
+                    key = null;
+                    val = null;
+                }
+            // just a key
             } else {
                 key = pair;
                 val = null;

@@ -1,4 +1,4 @@
-package net.acomputerdog.picam.web;
+package net.acomputerdog.picam.web.handler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
