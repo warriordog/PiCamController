@@ -53,7 +53,7 @@ public abstract class WebHandler implements HttpHandler {
 
     protected void sendFile(HttpExchange exchange, InputStream in) throws IOException {
         exchange.sendResponseHeaders(200, 0);
-        byte[] buff = new byte[64];
+        byte[] buff = new byte[128];
 
         // autocloses out
         try (OutputStream out = exchange.getResponseBody();) {

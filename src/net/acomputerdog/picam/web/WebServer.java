@@ -17,8 +17,12 @@ import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class WebServer {
+    // 30 seconds
+    private static final int SPEED_TEST_TIMEOUT = 30000;
+
     private final PiCamController controller;
     private final HttpServer server;
 
@@ -353,7 +357,7 @@ public class WebServer {
                                 streamOut = e.getResponseBody();
                             }
 
-                            byte[] buff = new byte[512];
+                            byte[] buff = new byte[128];
                             // H264 converter will always return at least 1 while process is active
                             while (streamIn.available() > 0) {
                                 int count = streamIn.read(buff);
@@ -423,6 +427,52 @@ public class WebServer {
         server.createContext("/func/get_settings", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getConfigJson(), 200, ex)));
         server.createContext("/func/reset_settings", new BasicWebHandler(controller::resetConfig));
         server.createContext("/func/save_settings", new BasicWebHandler(controller::saveConfig));
+        server.createContext("/func/speedtest", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                int size = 64;
+                if (!getData.isEmpty()) {
+                    try {
+                        int newSize = Integer.parseInt(getData);
+                        if (newSize > 0 && newSize <= 1024) {
+                            size = newSize;
+                        } else {
+                            sendResponse("400 Malformed Input: size must be 1 - 1024", 400, e);
+                        }
+                    } catch (NumberFormatException ex) {
+                        sendResponse("400 Malformed Input: size must be an integer", 400, e);
+                    }
+                }
+
+                e.getResponseHeaders().set("Content-Type", "application/octet-stream");
+                e.sendResponseHeaders(200, 0);
+                Random random = new Random();
+                OutputStream out = e.getResponseBody();
+                long timeStart = System.currentTimeMillis();
+                long bytes = 0;
+                try {
+                    byte[] buff = new byte[size];
+                    while (System.currentTimeMillis() - timeStart < SPEED_TEST_TIMEOUT) {
+                        random.nextBytes(buff);
+                        out.write(buff);
+                        bytes += size;
+                    }
+                } catch (IOException ignored) {
+                    long timeEnd = System.currentTimeMillis();
+                    long totalTime = timeEnd - timeStart;
+                    long seconds = totalTime / 1000L;
+                    long kilobytes = bytes >> 10;
+                    System.out.printf("Speed test finished, rate was %.2f KBps\n", (double)kilobytes / (double)seconds);
+                } finally {
+                    e.close();
+                }
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "GET".equals(e.getRequestMethod());
+            }
+        });
     }
 
     public void start() {
