@@ -44,9 +44,12 @@ public class WebServer {
 
         // general functions
         server.createContext("/func/", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
-        server.createContext("/func/exit", new BasicWebHandler(controller::exit));
-        server.createContext("/func/version", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getVersionString(), 200, ex)));
-        server.createContext("/func/reboot", new WebHandler() {
+
+        // admin functions
+        server.createContext("/func/admin", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/admin/exit", new BasicWebHandler(controller::exit));
+        server.createContext("/func/admin/version", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getVersionString(), 200, ex)));
+        server.createContext("/func/admin/reboot", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler, because response must be sent before controller shuts down
@@ -55,15 +58,47 @@ public class WebServer {
                 controller.exit();
             }
         });
-        server.createContext("/func/exit", new WebHandler() {
+        server.createContext("/func/admin/exit", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler, because response must be sent first
+                sendResponse("200 OK", 200, e);
+                controller.exit();
+            }
+        });
+        server.createContext("/func/admin/shutdown", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                // don't use a simpler handler, because response must be sent before controller shuts down
                 sendResponse("200 OK", 200, e);
                 Power.shutdown();
                 controller.exit();
             }
         });
+
+        // filesystem functions
+        server.createContext("/func/admin/fs", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/admin/fs/mount", new WebHandler() {
+            @Override
+            public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                if ("1".equals(getData)) {
+                    controller.getFS().mountRW();
+                    sendResponse("200 OK", 200, e);
+                } else if ("0".equals(getData)) {
+                    controller.getFS().mountRO();
+                    sendResponse("200 OK", 200, e);
+                } else {
+                    sendResponse("400 Malformed Input: mode must be 1 or 0", 400, e);
+                }
+
+            }
+
+            @Override
+            public boolean acceptRequest(HttpExchange e) {
+                return "GET".equals(e.getRequestMethod());
+            }
+        });
+        server.createContext("/func/admin/fs/sync", new BasicWebHandler(() -> controller.getFS().sync()));
 
         // recording functions
         server.createContext("/func/record", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));

@@ -13,28 +13,35 @@ public class FileSystem {
     }
 
     public void mountRW() {
-        if (config.readOnlyRoot) {
-            try {
-                String resp = Proc.execCMD("sudo", "mount", "-f", "-o", "remount,rw", config.rootFS);
-                if (resp.trim().isEmpty()) {
-                    throw new RuntimeException("Unable to remount RW: " + resp);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Error running mount command");
+        try {
+            String resp = Proc.execCMD("sudo", "mount", "-f", "-o", "remount,rw", config.rootFS);
+            if (!resp.trim().isEmpty()) {
+                throw new RuntimeException("Unable to remount RW: " + resp);
             }
+        } catch (IOException e) {
+            throw new RuntimeException("Error running mount command");
         }
     }
 
     public void mountRO() {
-        if (config.readOnlyRoot) {
-            try {
-                String resp = Proc.execCMD("sudo", "mount", "-f", "-o", "remount,ro", config.rootFS);
-                if (resp.trim().isEmpty()) {
-                    throw new RuntimeException("Unable to remount RO: " + resp);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Error running mount command");
+        try {
+            String resp = Proc.execCMD("sudo", "mount", "-f", "-o", "remount,ro", config.rootFS);
+            if (!resp.trim().isEmpty()) {
+                throw new RuntimeException("Unable to remount RO: " + resp);
             }
+        } catch (IOException e) {
+            throw new RuntimeException("Error running mount command");
+        }
+    }
+
+    public void sync() {
+        try {
+            String resp = Proc.execCMD("sudo", "sync");
+            if (!resp.trim().isEmpty()) {
+                throw new RuntimeException("Unable to sync: " + resp);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error running sync command");
         }
     }
 }

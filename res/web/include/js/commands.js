@@ -57,14 +57,34 @@ function previewLastSnap() {
 // exit program
 function sendExitProgram() {
     var req = new XMLHttpRequest();
-    req.open("GET", "/func/exit", true); // true for asynchronous
+    req.open("GET", "/func/admin/exit", true); // true for asynchronous
     req.send();
 }
 
 // reboot pi
 function sendRebootSystem() {
     var req = new XMLHttpRequest();
-    req.open("GET", "/func/reboot", true); // true for asynchronous
+    req.open("GET", "/func/admin/reboot", true); // true for asynchronous
+    req.send();
+}
+
+// shut down pi
+function sendShutdownSystem() {
+    var req = new XMLHttpRequest();
+    req.open("GET", "/func/admin/shutdown", true); // true for asynchronous
+    req.send();
+}
+
+// remount filesystem
+function sendMountFS(state) {
+    var req = new XMLHttpRequest();
+    req.open("GET", "/func/admin/fs/mount?" + state, true); // true for asynchronous
+    req.send();
+}
+
+function sendFSSync() {
+    var req = new XMLHttpRequest();
+    req.open("GET", "/func/admin/fs/sync", true); // true for asynchronous
     req.send();
 }
 

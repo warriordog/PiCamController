@@ -331,17 +331,17 @@
                 <div class="grid_item_long">
                     System:
                 </div>
+                <!-- Admin -->
+                <div class="grid_item">
+                    <input type="button" value="Admin" onclick="showFlexElementID('admin_settings_div')">
+                </div>
+                <!-- Debug -->
+                <div class="grid_item">
+                    <input type="button" value="Debug" onclick="showFlexElementID('debug_settings_div')">
+                </div>
                 <!-- Settings -->
                 <div class="grid_item">
                     <input type="button" value="Settings" onclick="showSettings()">
-                </div>
-                <!-- Exit -->
-                <div class="grid_item">
-                    <input type="button" value="Exit" onclick="sendExitProgram()">
-                </div>
-                <!-- Reboot -->
-                <div class="grid_item">
-                    <input type="button" value="Reboot" onclick="sendRebootSystem()">
                 </div>
             </div>
 
@@ -386,27 +386,6 @@
                         <input type="button" value="Reset" onclick="resetSnapSettings()">
                     </div>
                 </div>
-                <!-- Speed test -->
-                <div class="inner_grid_row">
-                    <div class="grid_item_long">
-                        Speed test:
-                    </div>
-                    <div class="grid_item">
-                        <a href="/func/debug/speedtest?1">XS</a>
-                    </div>
-                    <div class="grid_item">
-                        <a href="/func/debug/speedtest?64">S</a>
-                    </div>
-                    <div class="grid_item">
-                        <a href="/func/debug/speedtest?128">M</a>
-                    </div>
-                    <div class="grid_item">
-                        <a href="/func/debug/speedtest?256">L</a>
-                    </div>
-                    <div class="grid_item">
-                        <a href="/func/debug/speedtest?1024">XL</a>
-                    </div>
-                </div>
                 <!-- Empty divider row -->
                 <div class="inner_grid_row"></div>
                 <!-- Config header -->
@@ -428,6 +407,88 @@
                 <div class="inner_grid_row">
                     <div class="grid_item">
                         <textarea id="picam_config_text" cols="60" rows="20"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- hidden gridrow with admin settings -->
+            <div class="inner_grid_main" id="admin_settings_div" style="display: none">
+                <!-- Title row -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_title">
+                        Admin controls:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="hideElementID('admin_settings_div')">
+                    </div>
+                </div>
+                <!-- Power controls -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Power:
+                    </div>
+                    <!-- Exit -->
+                    <div class="grid_item">
+                        <input type="button" value="Exit" onclick="sendExitProgram()">
+                    </div>
+                    <!-- Reboot -->
+                    <div class="grid_item">
+                        <input type="button" value="Reboot" onclick="sendRebootSystem()">
+                    </div>
+                    <!-- Shutdown -->
+                    <div class="grid_item">
+                        <input type="button" value="Shutdown" onclick="sendShutdownSystem()">
+                    </div>
+                </div>
+                <!-- Filesystem controls -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Filesystem:
+                    </div>
+                    <!-- Mount RO -->
+                    <div class="grid_item">
+                        <input type="button" value="Mount R/O" onclick="sendMountFS(0)">
+                    </div>
+                    <!-- Mount RW -->
+                    <div class="grid_item">
+                        <input type="button" value="Mount R/W" onclick="sendMountFS(1)">
+                    </div>
+                    <!-- Synchronise FS -->
+                    <div class="grid_item">
+                        <input type="button" value="Sync" onclick="sendFSSync()">
+                    </div>
+                </div>
+            </div>
+            <!-- debug settings -->
+            <div class="inner_grid_main" id="debug_settings_div" style="display: none">
+                <!-- Title row -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_title">
+                        Debug tools:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="hideElementID('debug_settings_div')">
+                    </div>
+                </div>
+                <!-- Speed test -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Speed test:
+                    </div>
+                    <div class="grid_item">
+                        <a href="/func/debug/speedtest?1">XS</a>
+                    </div>
+                    <div class="grid_item">
+                        <a href="/func/debug/speedtest?64">S</a>
+                    </div>
+                    <div class="grid_item">
+                        <a href="/func/debug/speedtest?128">M</a>
+                    </div>
+                    <div class="grid_item">
+                        <a href="/func/debug/speedtest?256">L</a>
+                    </div>
+                    <div class="grid_item">
+                        <a href="/func/debug/speedtest?1024">XL</a>
                     </div>
                 </div>
             </div>

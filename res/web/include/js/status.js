@@ -10,7 +10,7 @@
                 }
             }
         };
-        req.open("GET", "/func/version", true); // true for asynchronous
+        req.open("GET", "/func/admin/version", true); // true for asynchronous
         req.send();
     }
 }
