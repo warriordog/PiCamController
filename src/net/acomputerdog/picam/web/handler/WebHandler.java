@@ -59,7 +59,7 @@ public abstract class WebHandler implements HttpHandler {
                 e.close();
             }
         } else {
-            System.err.println("Warning: attempted to send multiple resonses");
+            System.err.println("Warning: attempted to send multiple responses");
         }
     }
 

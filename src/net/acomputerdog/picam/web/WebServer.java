@@ -359,11 +359,11 @@ public class WebServer {
                             // H264 converter will always return at least 1 while process is active
                             while (streamIn.available() > 0) {
                                 int count = streamIn.read(buff);
-                                // stop if end of stream
-                                if (count == -1) {
-                                    break;
+
+                                // we may get ahead of converter on Pi Zero
+                                if (count > 0) {
+                                    streamOut.write(buff, 0, count);
                                 }
-                                streamOut.write(buff, 0, count);
                             }
                         } catch (FileNotFoundException ex) {
                             sendResponse("404 Not Found: Filesystem error", 404, e);
