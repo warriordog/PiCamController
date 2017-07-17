@@ -30,12 +30,12 @@ function updateLoop() {
 
     var req = new XMLHttpRequest();
     req.onreadystatechange = function () {
-        if (req.readyState == 4) {
-            if (req.status == 200) {
+        if (req.readyState === 4) {
+            if (req.status === 200) {
                 var respLine = req.responseText;
                 var respArray = respLine.split("|");
 
-                if (respArray.length == 3) {
+                if (respArray.length === 3) {
                     // record status
                     if (respArray[0] === "1") {
                         statusDiv.innerHTML = "<div style=\"color: red\">recording</div>";
@@ -59,6 +59,9 @@ function updateLoop() {
 
             updateLoopTimer = window.setTimeout(updateLoop, updateLoopInterval);
         }
+    };
+    req.onerror = function () {
+        statusDiv.innerHTML = "<div style=\"color: yellow\">unknown</div>";
     };
     req.open("GET", "/func/record/status", true); // true for asynchronous
     req.send();
