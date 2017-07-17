@@ -7,8 +7,11 @@ import java.io.*;
 import java.util.stream.Collectors;
 
 public abstract class WebHandler implements HttpHandler {
+    private boolean responseSent = false;
+
     @Override
     public void handle(HttpExchange e) throws IOException {
+        responseSent = false;
         if (acceptRequest(e)) {
             try {
                 String query = e.getRequestURI().getQuery();
@@ -18,12 +21,16 @@ public abstract class WebHandler implements HttpHandler {
                 } catch (Exception ex) {
                     System.err.println("Exception handling request");
                     ex.printStackTrace();
-                    sendResponse("500 Internal Server Error: " + ex.toString(), 500, e);
+                    if (!responseSent) {
+                        sendResponse("500 Internal Server Error: " + ex.toString(), 500, e);
+                    }
                 }
             } catch (IOException ex) {
                 System.err.println("IO error handling request");
                 ex.printStackTrace();
-                sendResponse("500 Internal I/O Error: " + ex.toString(), 500, e);
+                if (!responseSent) {
+                    sendResponse("500 Internal I/O Error: " + ex.toString(), 500, e);
+                }
             }
         } else {
             e.sendResponseHeaders(405, 0);
@@ -41,13 +48,18 @@ public abstract class WebHandler implements HttpHandler {
     public abstract void handleExchange(HttpExchange e, String getData, String postData) throws Exception;
 
     protected void sendResponse(String response, int code, HttpExchange e) throws IOException {
-        byte[] bytes = response.getBytes();
-        e.sendResponseHeaders(code, bytes.length);
-        try {
-            e.getResponseBody().write(bytes);
-        } finally {
-            e.getResponseBody().close();
-            e.close();
+        if (!responseSent) {
+            try {
+                byte[] bytes = response.getBytes();
+                e.sendResponseHeaders(code, bytes.length);
+                e.getResponseBody().write(bytes);
+            } finally {
+                responseSent = true;
+                e.getResponseBody().close();
+                e.close();
+            }
+        } else {
+            System.err.println("Warning: attempted to send multiple resonses");
         }
     }
 
