@@ -158,6 +158,26 @@ public class PiCamController {
         readConfig();
     }
 
+    public void clearCache() throws IOException {
+        File[] tmpContents = getTmpDir().listFiles();
+        if (tmpContents != null && tmpContents.length > 0) {
+            for (File f : tmpContents) {
+                if (!f.delete()) {
+                    System.err.printf("Warning: unable to delete file '%s'\n", f.getPath());
+                }
+            }
+        }
+
+        File[] streamContents = getStreamDir().listFiles();
+        if (streamContents != null && streamContents.length > 0) {
+            for (File f : streamContents) {
+                if (!f.delete()) {
+                    System.err.printf("Warning: unable to delete file '%s'\n", f.getPath());
+                }
+            }
+        }
+    }
+
     public Camera getCamera(int num) {
         return cameras[num];
     }

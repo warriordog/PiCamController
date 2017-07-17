@@ -3,16 +3,16 @@ package net.acomputerdog.picam.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 public class Proc {
     public static void execSync(String ... cmd) throws IOException {
-
+        System.out.printf("Executing: '%s'\n", Arrays.toString(cmd));
         try {
-            Process p = Runtime.getRuntime().exec(cmd);
+            Process p = execAsync(cmd);
             while (p.isAlive()) {
                 Thread.sleep(1);
             }
-
         }catch (InterruptedException e) {
             throw new RuntimeException("Interrupted", e);
         }
@@ -41,6 +41,9 @@ public class Proc {
             throw new IllegalArgumentException("Command must be specified");
         }
 
-        return Runtime.getRuntime().exec(cmd);
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command(cmd);
+        pb.inheritIO();
+        return pb.start();
     }
 }

@@ -99,6 +99,7 @@ public class WebServer {
             }
         });
         server.createContext("/func/admin/fs/sync", new BasicWebHandler(() -> controller.getFS().sync()));
+        server.createContext("/func/admin/fs/clear_cache", new BasicWebHandler(() -> controller.clearCache()));
 
         // recording functions
         server.createContext("/func/record", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));

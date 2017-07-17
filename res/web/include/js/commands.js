@@ -82,9 +82,17 @@ function sendMountFS(state) {
     req.send();
 }
 
+// Sync FS
 function sendFSSync() {
     var req = new XMLHttpRequest();
     req.open("GET", "/func/admin/fs/sync", true); // true for asynchronous
+    req.send();
+}
+
+// erase PiCam cache
+function sendEraseCache() {
+    var req = new XMLHttpRequest();
+    req.open("GET", "/func/admin/fs/clear_cache", true); // true for asynchronous
     req.send();
 }
 
