@@ -132,7 +132,7 @@ public class Network {
             secSettings =   "address " + sec.address + "\n" +
                             "gateway " + sec.gateway + "\n" +
                             "netmask " + sec.netmask + "\n";
-            primMode = "static";
+            secMode = "static";
         }
 
         String intContents = String.format(interfacesTemplate, config.wifiInterface, primMode, primSettings, secMode, secSettings);

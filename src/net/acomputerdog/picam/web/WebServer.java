@@ -1,11 +1,12 @@
 package net.acomputerdog.picam.web;
 
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.acomputerdog.picam.PiCamController;
-import net.acomputerdog.picam.camera.setting.Setting;
+import net.acomputerdog.picam.camera.setting.PicSettings;
 import net.acomputerdog.picam.camera.setting.Settings;
+import net.acomputerdog.picam.camera.setting.VidSettings;
 import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
 import net.acomputerdog.picam.system.Power;
@@ -20,7 +21,6 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 public class WebServer {
@@ -43,17 +43,17 @@ public class WebServer {
         server.createContext("/include/", new WebFileHandler());
 
         // general functions
-        server.createContext("/func/", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
 
         // admin functions
-        server.createContext("/func/admin", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/admin", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/admin/exit", new BasicWebHandler(controller::exit));
-        server.createContext("/func/admin/version", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getVersionString(), 200, ex)));
+        server.createContext("/func/admin/version", new SimpleWebHandler((h, ex) -> h.sendOKJson(h.createJson("version", controller.getVersionString()), ex)));
         server.createContext("/func/admin/reboot", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler, because response must be sent before controller shuts down
-                sendResponse("200 OK", 200, e);
+                sendSimpleResponse("200 OK", 200, e);
                 Power.reboot();
                 controller.exit();
             }
@@ -62,7 +62,7 @@ public class WebServer {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler, because response must be sent first
-                sendResponse("200 OK", 200, e);
+                sendSimpleResponse("200 OK", 200, e);
                 controller.exit();
             }
         });
@@ -70,27 +70,30 @@ public class WebServer {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler, because response must be sent before controller shuts down
-                sendResponse("200 OK", 200, e);
+                sendSimpleResponse("200 OK", 200, e);
                 Power.shutdown();
                 controller.exit();
             }
         });
 
         // filesystem functions
-        server.createContext("/func/admin/fs", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/admin/fs", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/admin/fs/mount", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-                if ("1".equals(getData)) {
-                    controller.getFS().mountRW();
-                    sendResponse("200 OK", 200, e);
-                } else if ("0".equals(getData)) {
-                    controller.getFS().mountRO();
-                    sendResponse("200 OK", 200, e);
-                } else {
-                    sendResponse("400 Malformed Input: mode must be 1 or 0", 400, e);
+                try {
+                    if ("1".equals(getData)) {
+                        controller.getFS().mountRW();
+                        sendSimpleResponse("200 OK", 200, e);
+                    } else if ("0".equals(getData)) {
+                        controller.getFS().mountRO();
+                        sendSimpleResponse("200 OK", 200, e);
+                    } else {
+                        sendSimpleResponse("400 Malformed Input: mode must be 1 or 0", 400, e);
+                    }
+                } catch (RuntimeException ex) {
+                    sendSimpleResponse("500 Internal Error: unable to execute mount commands", 500, e);
                 }
-
             }
 
             @Override
@@ -99,17 +102,16 @@ public class WebServer {
             }
         });
         server.createContext("/func/admin/fs/sync", new BasicWebHandler(() -> controller.getFS().sync()));
-        server.createContext("/func/admin/fs/clear_cache", new BasicWebHandler(() -> controller.clearCache()));
+        server.createContext("/func/admin/fs/clear_cache", new BasicWebHandler(controller::clearCache));
 
         // recording functions
-        server.createContext("/func/record", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/record", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/record/status", new SimpleWebHandler((h, ex) -> {
-            String resp = controller.getCamera(0).isRecording() ? "1" : "0";
-            resp += "|";
-            resp += controller.getCamera(0).getRecordingPath();
-            resp += "|";
-            resp += controller.getCamera(0).getRecordingTime();
-            h.sendResponse(resp, 200, ex);
+            JsonObject json = new JsonObject();
+            json.addProperty("is_recording", controller.getCamera(0).isRecording());
+            json.addProperty("recording_path", controller.getCamera(0).getRecordingPath());
+            json.addProperty("recording_time", controller.getCamera(0).getRecordingTime());
+            h.sendOKJson(json, ex);
         }));
         server.createContext("/func/record/video", new WebHandler() {
             @Override
@@ -123,16 +125,16 @@ public class WebServer {
 
                             controller.getCamera(0).recordFor(time, new H264File(controller.getVidDir(), fileName));
 
-                            sendResponse("200 OK", 200, e);
+                            sendSimpleResponse("200 OK", 200, e);
                         } catch (NumberFormatException ex) {
-                            sendResponse("400 Malformed Input: time must be an integer", 400, e);
+                            sendSimpleResponse("400 Malformed Input: time must be an integer", 400, e);
                         }
 
                     } else {
-                        sendResponse("400 Malformed Input: wrong number of arguments", 400, e);
+                        sendSimpleResponse("400 Malformed Input: wrong number of arguments", 400, e);
                     }
                 } else {
-                    sendResponse("409 Conflict: Already recording.", 409, e);
+                    sendSimpleResponse("409 Conflict: Already recording.", 409, e);
                 }
             }
 
@@ -145,7 +147,7 @@ public class WebServer {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 // don't use a simpler handler because this must be out of order
-                sendResponse("200 OK", 200, e);
+                sendSimpleResponse("200 OK", 200, e);
                 controller.getCamera(0).stop();
             }
         });
@@ -156,7 +158,7 @@ public class WebServer {
                 JPGFile file = new JPGFile(controller.getPicDir(), fileName);
                 controller.getCamera(0).takeSnapshot(file);
 
-                sendResponse("200 OK", 200, e);
+                sendSimpleResponse("200 OK", 200, e);
             }
 
             @Override
@@ -166,7 +168,7 @@ public class WebServer {
         });
 
         // media settings
-        server.createContext("/func/media", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/media", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/media/download", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
@@ -197,22 +199,22 @@ public class WebServer {
 
                                     sendFile(e, in);
                                 } catch (FileNotFoundException ex) {
-                                    sendResponse("404 Not Found: Filesystem error", 404, e);
+                                    sendSimpleResponse("404 Not Found: Filesystem error", 404, e);
                                 } catch (IOException ex) {
                                     System.err.println("IO error while sending file");
                                     ex.printStackTrace();
                                 }
                             } else {
-                                sendResponse("404 Not Found: No file could be found by that name", 404, e);
+                                sendSimpleResponse("404 Not Found: No file could be found by that name", 404, e);
                             }
                         } else {
-                            sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                            sendSimpleResponse("400 Malformed Input: unknown resource type", 400, e);
                         }
                     } else {
-                        sendResponse("400 Malformed Input: resource path is invalid", 400, e);
+                        sendSimpleResponse("400 Malformed Input: resource path is invalid", 400, e);
                     }
                 } else {
-                    sendResponse("400 Malformed Input: resource type not specified", 400, e);
+                    sendSimpleResponse("400 Malformed Input: resource type not specified", 400, e);
                 }
             }
 
@@ -233,7 +235,7 @@ public class WebServer {
                 }
 
                 if (dir != null) {
-                    StringBuilder resp = new StringBuilder();
+                    JsonObject json = new JsonObject();
 
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     File[] files = dir.listFiles();
@@ -241,21 +243,19 @@ public class WebServer {
                         // sort by modified time
                         Arrays.sort(files, (o1, o2) -> (int) (o2.lastModified() - o1.lastModified()));
 
-                        for (int i = 0; i < files.length; i++) {
-                            if (i > 0) {
-                                resp.append('|');
-                            }
-                            File file = files[i];
-                            resp.append(file.getName());
-                            resp.append(',');
-                            resp.append(formatFileSize(file.length()));
-                            resp.append(',');
-                            resp.append(dateFormat.format(file.lastModified()));
+                        JsonArray fileArray = new JsonArray();
+                        for (File file : files) {
+                            JsonObject fObject = new JsonObject();
+                            fObject.addProperty("name", file.getName());
+                            fObject.addProperty("size", formatFileSize(file.length()));
+                            fObject.addProperty("modified", dateFormat.format(file.lastModified()));
+                            fileArray.add(fObject);
                         }
+                        json.add("files", fileArray);
                     }
-                    sendResponse(resp.toString(), 200, e);
+                    sendOKJson(json, e);
                 } else {
-                    sendResponse("400 Malformed Input: missing arguments", 400, e);
+                    sendSimpleResponse("400 Malformed Input: missing arguments", 400, e);
                 }
             }
         });
@@ -282,29 +282,29 @@ public class WebServer {
                                     File streamFile = new File(controller.getStreamDir(), path + ".mp4");
                                     if (streamFile.isFile()) {
                                         if (streamFile.delete()) {
-                                            sendResponse("200 OK", 200, e);
+                                            sendSimpleResponse("200 OK", 200, e);
                                         } else {
                                             System.out.printf("Unable to delete stream cache '%s'\n", file.getPath());
-                                            sendResponse("500 Internal Error: unable to cache file", 500, e);
+                                            sendSimpleResponse("500 Internal Error: unable to cache file", 500, e);
                                         }
                                     } else {
-                                        sendResponse("200 OK", 200, e);
+                                        sendSimpleResponse("200 OK", 200, e);
                                     }
                                 } else {
                                     System.out.printf("Unable to delete file '%s'\n", file.getPath());
-                                    sendResponse("500 Internal Error: unable to delete file", 500, e);
+                                    sendSimpleResponse("500 Internal Error: unable to delete file", 500, e);
                                 }
                             } else {
-                                sendResponse("400 Malformed Input: file does not exist", 400, e);
+                                sendSimpleResponse("400 Malformed Input: file does not exist", 400, e);
                             }
                         } else {
-                            sendResponse("400 Malformed Input: invalid file name", 400, e);
+                            sendSimpleResponse("400 Malformed Input: invalid file name", 400, e);
                         }
                     } else {
-                        sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                        sendSimpleResponse("400 Malformed Input: unknown resource type", 400, e);
                     }
                 } else {
-                    sendResponse("400 Malformed Input: missing arguments", 400, e);
+                    sendSimpleResponse("400 Malformed Input: missing arguments", 400, e);
                 }
             }
 
@@ -318,9 +318,9 @@ public class WebServer {
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 if (controller.getCamera(0).currentSnapshotReady()) {
                     String snapName = controller.getCamera(0).getLastSnapshot().getName();
-                    sendResponse(snapName, 200, e);
+                    sendOKJson(createJson("name", snapName), e);
                 } else {
-                    sendResponse("202 Accepted: waiting for snapshot", 202, e);
+                    sendSimpleResponse("202 Accepted: waiting for snapshot", 202, e);
                 }
             }
         });
@@ -367,7 +367,7 @@ public class WebServer {
                                 }
                             }
                         } catch (FileNotFoundException ex) {
-                            sendResponse("404 Not Found: Filesystem error", 404, e);
+                            sendSimpleResponse("404 Not Found: Filesystem error", 404, e);
                         } catch (IOException ex) {
                             System.err.println("IO error while sending file");
                             ex.printStackTrace();
@@ -386,10 +386,10 @@ public class WebServer {
                             e.close();
                         }
                     } else {
-                        sendResponse("404 Not Found: No file could be found by that name", 404, e);
+                        sendSimpleResponse("404 Not Found: No file could be found by that name", 404, e);
                     }
                 } else {
-                    sendResponse("400 Malformed Input: resource path is invalid", 400, e);
+                    sendSimpleResponse("400 Malformed Input: resource path is invalid", 400, e);
                 }
             }
 
@@ -400,9 +400,9 @@ public class WebServer {
         });
 
         // settings and config
-        server.createContext("/func/settings", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/settings", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         // camera settings
-        server.createContext("/func/settings/camera", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/settings/camera", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/settings/camera/get", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
@@ -414,42 +414,33 @@ public class WebServer {
                 }
 
                 if (settings != null) {
-                    StringBuilder builder = new StringBuilder();
-                    List<Setting> allSettings = settings.getList().getAllSettings();
-                    for (int i = 0; i < allSettings.size(); i++) {
-                        if (i > 0) {
-                            builder.append("|");
-                        }
-                        Setting setting = allSettings.get(i);
-                        builder.append(setting.getKey());
-                        builder.append("=");
-                        // an empty value means null
-                        if (setting.isIncluded()) {
-                            builder.append(setting.getValue());
-                        }
-                    }
-                    sendResponse(builder.toString(), 200, e);
+                    JsonObject json = (JsonObject)controller.getGson().toJsonTree(settings);
+                    sendOKJson(json, e);
                 } else {
-                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                    sendSimpleResponse("400 Malformed Input: unknown resource type", 400, e);
                 }
             }
         });
         server.createContext("/func/settings/camera/set", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-                int split = postData.indexOf('&');
-                if (split > 0 && postData.length() - split > 1) {
-
-                    String type = postData.substring(0, split);
-                    if ("v".equals(type)) {
-                        controller.getCamera(0).getVidSettings().addSettingPairs(postData.substring(split + 1).split(" "));
-                        sendResponse("200 OK", 200, e);
-                    } else if ("p".equals(type)) {
-                        controller.getCamera(0).getPicSettings().addSettingPairs(postData.substring(split + 1).split(" "));
-                        sendResponse("200 OK", 200, e);
+                JsonObject json = new JsonParser().parse(postData).getAsJsonObject();
+                JsonElement type = json.get("type");
+                JsonElement contents = json.get("settings");
+                if (type != null && contents != null) {
+                    if ("v".equals(type.getAsString())) {
+                        VidSettings settings = controller.getGson().fromJson(contents, VidSettings.class);
+                        controller.getCamera(0).getVidSettings().mixIn(settings);
+                        sendSimpleResponse("200 OK", 200, e);
+                    } else if ("p".equals(type.getAsString())) {
+                        PicSettings settings = controller.getGson().fromJson(contents, PicSettings.class);
+                        controller.getCamera(0).getPicSettings().mixIn(settings);
+                        sendSimpleResponse("200 OK", 200, e);
                     } else {
-                        sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                        sendSimpleResponse("400 Malformed Input: unknown resource type", 400, e);
                     }
+                } else {
+                    sendSimpleResponse("400 Malformed Input: missing type or contents", 400, e);
                 }
             }
 
@@ -463,19 +454,19 @@ public class WebServer {
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 if ("v".equals(getData)) {
                     controller.getCamera(0).resetVidSettings();
-                    sendResponse("200 OK", 200, e);
+                    sendSimpleResponse("200 OK", 200, e);
                 } else if ("p".equals(getData)) {
                     controller.getCamera(0).resetPicSettings();
-                    sendResponse("200 OK", 200, e);
+                    sendSimpleResponse("200 OK", 200, e);
                 } else {
-                    sendResponse("400 Malformed Input: unknown resource type", 400, e);
+                    sendSimpleResponse("400 Malformed Input: unknown resource type", 400, e);
                 }
             }
         });
         //TODO find or add camera "set" function
 
         // system settings
-        server.createContext("/func/settings/system", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/settings/system", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/settings/system/apply", new BasicWebHandler(() -> {
             controller.getNetwork().backupNetSettings();
             controller.getNetwork().applyNetworkSettings();
@@ -485,9 +476,9 @@ public class WebServer {
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 try {
                     controller.updateConfig(postData);
-                    sendResponse("200 OK", 200, e);
+                    sendSimpleResponse("200 OK", 200, e);
                 } catch (JsonSyntaxException ex) {
-                    sendResponse("400 Malformed Input: invalid json: " + ex.getMessage(), 400, e);
+                    sendSimpleResponse("400 Malformed Input: invalid json: " + ex.getMessage(), 400, e);
                 }
             }
 
@@ -496,12 +487,12 @@ public class WebServer {
                 return "POST".equals(e.getRequestMethod());
             }
         });
-        server.createContext("/func/settings/system/get", new SimpleWebHandler((h, ex) -> h.sendResponse(controller.getConfigJson(), 200, ex)));
+        server.createContext("/func/settings/system/get", new SimpleWebHandler((h, ex) -> h.sendOKJson(controller.getConfigJson(), ex)));
         server.createContext("/func/settings/system/reset", new BasicWebHandler(controller::resetConfig));
         server.createContext("/func/settings/system/save", new BasicWebHandler(controller::saveConfig));
 
         // debug functions
-        server.createContext("/func/debug", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
+        server.createContext("/func/debug", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/debug/speedtest", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
@@ -512,10 +503,10 @@ public class WebServer {
                         if (newSize > 0 && newSize <= 1024) {
                             size = newSize;
                         } else {
-                            sendResponse("400 Malformed Input: size must be 1 - 1024", 400, e);
+                            sendSimpleResponse("400 Malformed Input: size must be 1 - 1024", 400, e);
                         }
                     } catch (NumberFormatException ex) {
-                        sendResponse("400 Malformed Input: size must be an integer", 400, e);
+                        sendSimpleResponse("400 Malformed Input: size must be an integer", 400, e);
                     }
                 }
 

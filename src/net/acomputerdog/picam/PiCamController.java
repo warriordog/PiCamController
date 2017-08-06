@@ -2,6 +2,7 @@ package net.acomputerdog.picam;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import net.acomputerdog.picam.camera.Camera;
 import net.acomputerdog.picam.config.PiConfig;
@@ -182,8 +183,8 @@ public class PiCamController {
         return cameras[num];
     }
 
-    public String getConfigJson() {
-        return gson.toJson(config);
+    public JsonObject getConfigJson() {
+        return (JsonObject)gson.toJsonTree(config);
     }
 
     public String getVersionString() {
@@ -220,6 +221,10 @@ public class PiCamController {
 
     public FileSystem getFS() {
         return fileSystem;
+    }
+
+    public Gson getGson() {
+        return gson;
     }
 
     public static void main(String[] args) {

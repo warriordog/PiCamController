@@ -1,5 +1,6 @@
 package net.acomputerdog.picam.web.handler;
 
+import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -19,8 +20,20 @@ public class SimpleWebHandler extends WebHandler {
 
     // make public so handlers can send responses
     @Override
-    public void sendResponse(String response, int code, HttpExchange e) throws IOException {
-        super.sendResponse(response, code, e);
+    public void sendSimpleResponse(String message, int code, HttpExchange e) throws IOException {
+        super.sendSimpleResponse(message, code, e);
+    }
+
+    // make public so handlers can send responses
+    @Override
+    public void sendJson(JsonObject object, String response, int code, HttpExchange e) throws IOException {
+        super.sendJson(object, response, code, e);
+    }
+
+    // make public so handlers can send responses
+    @Override
+    public void sendOKJson(JsonObject object, HttpExchange e) throws IOException {
+        super.sendOKJson(object, e);
     }
 
     // make public so handlers can send responses
