@@ -23,7 +23,7 @@ public class H264Converter extends InputStream {
 
         command.add("bash");
         command.add("-c");
-        command.add("MP4Box -add " + vidFile.getPath() + " -new " + tmpFile.getPath());
+        command.add("MP4Box -noprog -add " + vidFile.getPath() + " -new " + tmpFile.getPath());
 
         builder.command(command);
         builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
@@ -31,6 +31,8 @@ public class H264Converter extends InputStream {
 
         mp4box = builder.start();
         long time = 0;
+        long fileLength = vidFile.length();
+        long timeout = fileLength == 0 ? 2000 : (fileLength / 10240);
         while (!tmpFile.exists()) {
             try {
                 Thread.sleep(1);
@@ -39,7 +41,7 @@ public class H264Converter extends InputStream {
                 //break in case thread is being stopped
                 break;
             }
-            if (time >= 2000) {
+            if (time >= timeout) {
                 mp4box.destroy();
                 throw new RuntimeException("Timeout waiting for MP4Box");
             }
