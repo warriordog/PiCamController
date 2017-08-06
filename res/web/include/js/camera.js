@@ -138,12 +138,12 @@ const camera = {
     },
     // erase video cache
     eraseCache : function(successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
-        this._sendGET("/func/admin/fs/clear_cache", json, successCallback, failureCallback, errorCallback);
+        this._sendGET("/func/admin/fs/clear_cache", successCallback, failureCallback, errorCallback);
     },
 
     // reset settings
     resetSystemSettings : function(successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
-        this._sendGET("/func/settings/system/reset", json, successCallback, failureCallback, errorCallback);
+        this._sendGET("/func/settings/system/reset", successCallback, failureCallback, errorCallback);
     },
     // apply system settings
     applySystemSettings : function(settings, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
