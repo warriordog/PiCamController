@@ -124,7 +124,7 @@ public class WebServer {
             }
         });
         server.createContext("/func/record/snapshot", new JsonWebHandler((h, e, json) -> {
-            JPGFile file = new JPGFile(controller.getPicDir(), getJsonField(json, "fileName").getAsString());
+            JPGFile file = new JPGFile(controller.getPicDir(), getJsonField(json, "filename").getAsString());
             controller.getCamera(0).takeSnapshot(file);
 
             h.sendSimpleResponse("200 OK", 200, e);

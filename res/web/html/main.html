@@ -87,7 +87,7 @@
             }
 
             function takeSnapshot() {
-                camera.recordSnapshot(document.getElementById("snapshot_name").value, function (){
+                camera.recordSnapshot(document.getElementById("snapshot_name").value, function (req, json){
                     camera.getSnapshotPreview(function (req, json){
                        showPreview('p', json.name);
                     });
