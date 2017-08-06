@@ -43,6 +43,8 @@ public class Network {
     public void applyNetworkSettings() throws IOException {
         PiConfig config = controller.getConfig();
         if (config.networkEnabled) {
+            // only make backups if net is enabled
+            backupNetSettings();
 
             // enable write access
             controller.getFS().mountRW();
@@ -58,7 +60,6 @@ public class Network {
 
             // turn on wifi
             Proc.execSync("sudo", "ifconfig", config.wifiInterface, "up");
-
 
             if (config.readOnlyRoot) {
                 // disable write access
@@ -132,10 +133,10 @@ public class Network {
             secSettings =   "address " + sec.address + "\n" +
                             "gateway " + sec.gateway + "\n" +
                             "netmask " + sec.netmask + "\n";
-            primMode = "static";
+            secMode = "static";
         }
 
-        String intContents = String.format(interfacesTemplate, config.wifiInterface, primMode, primSettings, secMode, secSettings);
+        String intContents = String.format(interfacesTemplate, config.wifiInterface, config.wifiInterface, primMode, primSettings, secMode, secSettings);
 
         writeRootFile("/etc/network/interfaces", intContents);
     }

@@ -64,7 +64,7 @@ public class PiCamController {
 
     private void start() {
         webServer.start();
-        System.out.println("Started.");
+        System.out.println("Started version " + getVersionString() + ".");
     }
 
     public void exit() {
@@ -92,22 +92,22 @@ public class PiCamController {
                 System.out.println("Unable to create base directory");
             }
 
-            vidDir = new File(baseDir, "videos/");
+            vidDir = new File(baseDir, "videos");
             if (!vidDir.isDirectory() && !vidDir.mkdir()) {
                 System.out.println("Unable to create video directory");
             }
 
-            picDir = new File(baseDir, "snapshots/");
+            picDir = new File(baseDir, "snapshots");
             if (!picDir.isDirectory() && !picDir.mkdir()) {
                 System.out.println("Unable to create snapshot directory");
             }
 
-            streamDir = new File(baseDir, "stream/");
+            streamDir = new File(baseDir, "stream");
             if (!streamDir.isDirectory() && !streamDir.mkdir()) {
                 System.out.println("Unable to create stream directory");
             }
 
-            tmpDir = new File(baseDir, "tmp/");
+            tmpDir = new File(baseDir, "tmp");
             if (!tmpDir.isDirectory() && !tmpDir.mkdir()) {
                 System.out.println("Unable to create temp directory");
             }
@@ -187,7 +187,7 @@ public class PiCamController {
     }
 
     public String getVersionString() {
-        return "Pi Camera Controller v0.4.0";
+        return "Pi Camera Controller v0.4.4";
     }
 
     public File getBaseDir() {

@@ -1,19 +1,29 @@
-# interfaces(5) file used by ifup(8) and ifdown(8)
 # Include files from /etc/network/interfaces.d:
 source-directory /etc/network/interfaces.d
 
+# Setup lo at boot
 auto lo
+# Interface lo uses inet protocol and is setup in loopback mode
 iface lo inet loopback
 
+# Setup ethernet at boot
 auto eth0
+# Interface eth0 uses inet protocol and is set up by DHCP
 iface eth0 inet dhcp
 
+# Wifi device can be triggered by "hotplug" subsystem
 allow-hotplug %s
-iface wlan0 inet manual
+# Interface <wifi> uses inet protocols and is manually configured
+iface %s inet manual
+# Allow roaming between access points using wpa config
 wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
 
+# Primary wifi uses inet protocol
 iface primary inet %s
+# Static IP settings for primary
 %s
 
+# Secondary wifi settings
 iface secondary inet %s
+# Static IP for secondary
 %s

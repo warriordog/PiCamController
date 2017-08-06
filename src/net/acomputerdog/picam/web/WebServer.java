@@ -82,9 +82,11 @@ public class WebServer {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 if ("1".equals(getData)) {
+                    //TODO handle error
                     controller.getFS().mountRW();
                     sendResponse("200 OK", 200, e);
                 } else if ("0".equals(getData)) {
+                    //todo handle error
                     controller.getFS().mountRO();
                     sendResponse("200 OK", 200, e);
                 } else {
@@ -98,6 +100,7 @@ public class WebServer {
                 return "GET".equals(e.getRequestMethod());
             }
         });
+        //TODO handle error
         server.createContext("/func/admin/fs/sync", new BasicWebHandler(() -> controller.getFS().sync()));
         server.createContext("/func/admin/fs/clear_cache", new BasicWebHandler(() -> controller.clearCache()));
 
@@ -477,7 +480,6 @@ public class WebServer {
         // system settings
         server.createContext("/func/settings/system", new SimpleWebHandler((h, ex) -> h.sendResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/settings/system/apply", new BasicWebHandler(() -> {
-            controller.getNetwork().backupNetSettings();
             controller.getNetwork().applyNetworkSettings();
         }));
         server.createContext("/func/settings/system/set", new WebHandler() {

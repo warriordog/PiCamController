@@ -17,8 +17,8 @@ public class PiConfig {
         PiConfig cfg = new PiConfig();
         cfg.baseDirectory = "./";
         cfg.rootFS = "/";
-        cfg.networkEnabled = false;
-        cfg.readOnlyRoot = false;
+        cfg.networkEnabled = true;
+        cfg.readOnlyRoot = true;
         cfg.wifiInterface = "wlan0";
         cfg.primaryWifi = WifiNetwork.createDefault();
         cfg.secondaryWifi = WifiNetwork.createDefault();

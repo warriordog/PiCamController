@@ -47,6 +47,8 @@ public class GpioManager {
     }
 
     public void shutdown() {
+        gpio.unprovisionPin(recordToggle);
+        gpio.unprovisionPin(shutdownButton);
         gpio.shutdown();
     }
 }
