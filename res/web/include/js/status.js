@@ -44,5 +44,5 @@ function updateLoop() {
 
 // start update loop
 {
-    updateLoopTimer = window.setTimeout(updateLoop, updateLoopInterval);
+    updateLoopTimer = window.setTimeout(updateLoop, 500);
 }
