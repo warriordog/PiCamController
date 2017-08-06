@@ -38,13 +38,13 @@
                 showFlexElementID("settings_div");
 
                 camera.getCamSettings(true, function(req, json) {
-                    document.getElementById("vid_defaults_field").value = json.settings;
+                    document.getElementById("vid_defaults_field").value = JSON.stringify(json.settings);
                 });
                 camera.getCamSettings(false, function(req, json) {
-                    document.getElementById("snap_defaults_field").value = json.settings;
+                    document.getElementById("snap_defaults_field").value = JSON.stringify(json.settings);
                 });
                 camera.getSystemSettings(function(req, json) {
-                    document.getElementById("picam_config_text").value = json.settings;
+                    document.getElementById("picam_config_text").value = JSON.stringify(json.settings);
                 });
             }
 

@@ -330,10 +330,12 @@ public class WebServer {
         // camera settings
         server.createContext("/func/settings/camera", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
         server.createContext("/func/settings/camera/get", new JsonWebHandler((h, e, json) -> {
-            Settings settings = getJsonField(json, "is_video").getAsBoolean() ? controller.getCamera(0).getVidSettings() : controller.getCamera(0).getPicSettings();
+            JsonObject response = new JsonObject();
 
-            JsonObject settingsJson = (JsonObject)controller.getGson().toJsonTree(settings);
-            h.sendOKJson(settingsJson, e);
+            Settings settings = getJsonField(json, "is_video").getAsBoolean() ? controller.getCamera(0).getVidSettings() : controller.getCamera(0).getPicSettings();
+            response.add("settings", controller.getGson().toJsonTree(settings));
+
+            h.sendOKJson(response, e);
         }));
         server.createContext("/func/settings/camera/set", new JsonWebHandler((h, e, json) -> {
             String contents = getJsonField(json, "settings").getAsString();
@@ -363,7 +365,11 @@ public class WebServer {
             controller.getNetwork().applyNetworkSettings();
             h.sendSimpleResponse("200 OK", 200, e);
         }));
-        server.createContext("/func/settings/system/get", new SimpleWebHandler((h, ex) -> h.sendOKJson(controller.getConfigJson(), ex)));
+        server.createContext("/func/settings/system/get", new SimpleWebHandler((h, ex) -> {
+            JsonObject response = new JsonObject();
+            response.add("settings", controller.getConfigJson());
+            h.sendOKJson(response, ex);
+        }));
         server.createContext("/func/settings/system/reset", new BasicWebHandler(controller::resetConfig));
         server.createContext("/func/settings/system/save", new BasicWebHandler(controller::saveConfig));
 
