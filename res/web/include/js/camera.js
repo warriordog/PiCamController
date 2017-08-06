@@ -171,7 +171,7 @@ const camera = {
             is_video: isVideo,
             settings: settings
         };
-        this._sendPOST("/func/settings/camera/apply", json, successCallback, failureCallback, errorCallback);
+        this._sendPOST("/func/settings/camera/set", json, successCallback, failureCallback, errorCallback);
     },
     // get camera settings
     getCamSettings : function(isVideo, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
