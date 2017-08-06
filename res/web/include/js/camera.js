@@ -95,11 +95,17 @@ const camera = {
         this._sendGET("/func/record/stop", successCallback, failureCallback, errorCallback);
     },
     // get the filename of the last snapshot (for preview)
-    getSnapshotPreview : function(successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback) {
+    getSnapshotPreview : function(successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback, numTries = 0) {
         this._sendGET("/func/media/lastsnap", successCallback, function (req, json) {
             // waiting
             if (req.status === 202) {
-                this.getSnapshotPreview(successCallback, failureCallback, errorCallback);
+                if (numTries < 60) {
+                    window.setTimeout(function () {
+                        this.getSnapshotPreview(successCallback, failureCallback, errorCallback, numTries + 1)
+                    }, 500);
+                } else {
+                    failureCallback(req, json);
+                }
             } else {
                 failureCallback(req, json);
             }
@@ -153,23 +159,24 @@ const camera = {
     },
 
     // reset camera settings
-    resetCamSettings : function(type, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
+    resetCamSettings : function(isVideo, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
         let json = {
-            type: type
+            is_video: isVideo
         };
         this._sendPOST("/func/settings/camera/reset", json, successCallback, failureCallback, errorCallback);
     },
     // apply camera settings
-    applyCamSettings : function(type, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
+    applyCamSettings : function(isVideo, settings, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
         let json = {
-            type: type
+            is_video: isVideo,
+            settings: settings
         };
         this._sendPOST("/func/settings/camera/apply", json, successCallback, failureCallback, errorCallback);
     },
     // get camera settings
-    getCamSettings : function(type, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
+    getCamSettings : function(isVideo, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
         let json = {
-            type: type
+            is_video: isVideo
         };
         this._sendPOST("/func/settings/camera/get", json, successCallback, failureCallback, errorCallback);
     },

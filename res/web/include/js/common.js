@@ -28,3 +28,11 @@ function showFlexElementID(elementID) {
 function showFlexElement(element) {
     element.style.display = "flex";
 }
+
+function isFlexVisible(element) {
+    return element.style.display !== "none";
+}
+
+function isFlexVisibleID(elementID) {
+    return isFlexVisible(document.getElementById(elementID));
+}
