@@ -82,15 +82,16 @@ public class WebServer {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 try {
-                    if ("1".equals(getData)) {
+                    JsonObject json = new JsonParser().parse(postData).getAsJsonObject();
+                    if (json.getAsJsonPrimitive().getAsBoolean()) {
                         controller.getFS().mountRW();
                         sendSimpleResponse("200 OK", 200, e);
-                    } else if ("0".equals(getData)) {
+                    } else {
                         controller.getFS().mountRO();
                         sendSimpleResponse("200 OK", 200, e);
-                    } else {
-                        sendSimpleResponse("400 Malformed Input: mode must be 1 or 0", 400, e);
                     }
+                } catch (JsonParseException | IllegalStateException ex) {
+                    sendSimpleResponse("400 Malformed Input: invalid JSON", 400, e);
                 } catch (RuntimeException ex) {
                     sendSimpleResponse("500 Internal Error: unable to execute mount commands", 500, e);
                 }
@@ -98,7 +99,7 @@ public class WebServer {
 
             @Override
             public boolean acceptRequest(HttpExchange e) {
-                return "GET".equals(e.getRequestMethod());
+                return "POST".equals(e.getRequestMethod());
             }
         });
         server.createContext("/func/admin/fs/sync", new BasicWebHandler(() -> controller.getFS().sync()));
@@ -226,16 +227,16 @@ public class WebServer {
         server.createContext("/func/media/list", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
+                try {
+                    JsonObject json = new JsonParser().parse(postData).getAsJsonObject();
+                    File dir;
+                    if (json.getAsJsonPrimitive("is_video").getAsBoolean()) {
+                        dir = controller.getVidDir();
+                    } else {
+                        dir = controller.getPicDir();
+                    }
 
-                File dir = null;
-                if ("v".equals(getData)) {
-                    dir = controller.getVidDir();
-                } else if ("p".equals(getData)) {
-                    dir = controller.getPicDir();
-                }
-
-                if (dir != null) {
-                    JsonObject json = new JsonObject();
+                    JsonObject response = new JsonObject();
 
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     File[] files = dir.listFiles();
@@ -251,11 +252,11 @@ public class WebServer {
                             fObject.addProperty("modified", dateFormat.format(file.lastModified()));
                             fileArray.add(fObject);
                         }
-                        json.add("files", fileArray);
+                        response.add("files", fileArray);
                     }
-                    sendOKJson(json, e);
-                } else {
-                    sendSimpleResponse("400 Malformed Input: missing arguments", 400, e);
+                    sendOKJson(response, e);
+                } catch (JsonParseException ex) {
+                    sendSimpleResponse("400 Malformed Input: invalid json", 400, e);
                 }
             }
         });
@@ -467,15 +468,13 @@ public class WebServer {
 
         // system settings
         server.createContext("/func/settings/system", new SimpleWebHandler((h, ex) -> h.sendSimpleResponse("404 Unknown function", 404, ex)));
-        server.createContext("/func/settings/system/apply", new BasicWebHandler(() -> {
-            controller.getNetwork().backupNetSettings();
-            controller.getNetwork().applyNetworkSettings();
-        }));
         server.createContext("/func/settings/system/set", new WebHandler() {
             @Override
             public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
                 try {
                     controller.updateConfig(postData);
+                    controller.getNetwork().backupNetSettings();
+                    controller.getNetwork().applyNetworkSettings();
                     sendSimpleResponse("200 OK", 200, e);
                 } catch (JsonSyntaxException ex) {
                     sendSimpleResponse("400 Malformed Input: invalid json: " + ex.getMessage(), 400, e);

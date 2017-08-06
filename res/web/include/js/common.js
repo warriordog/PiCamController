@@ -7,7 +7,7 @@
 
 // remove javascript warning
 {
-    var warningMessage = document.getElementById("javascript_warning");
+    let warningMessage = document.getElementById("javascript_warning");
     if (warningMessage !== null) {
         warningMessage.remove();
     }
