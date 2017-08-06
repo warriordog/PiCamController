@@ -45,4 +45,7 @@ public class VidSettings extends Settings {
 
     // exposure mode
     public final Setting exposure = new Setting(list, "ex", "antishake");
+
+    // rotation (0, 90, 180, 270)
+    public final Setting rotation = new Setting(list, "rot", 0);
 }

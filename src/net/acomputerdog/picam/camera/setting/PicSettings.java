@@ -27,4 +27,7 @@ public class PicSettings extends Settings {
 
     // frameburst mode
     public final ValuelessSetting frameburst = new ValuelessSetting(list, "bm", true);
+
+    // rotation (0, 90, 180, 270)
+    public final Setting rotation = new Setting(list, "rot", 0);
 }
