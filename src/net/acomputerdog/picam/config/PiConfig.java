@@ -15,7 +15,7 @@ public class PiConfig {
 
     public static PiConfig createDefault() {
         PiConfig cfg = new PiConfig();
-        cfg.baseDirectory = "./";
+        cfg.baseDirectory = "/media/picam";
         cfg.rootFS = "/";
         cfg.networkEnabled = true;
         cfg.readOnlyRoot = true;
