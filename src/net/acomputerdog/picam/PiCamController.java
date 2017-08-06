@@ -154,6 +154,11 @@ public class PiCamController {
         config = PiConfig.createDefault();
     }
 
+    public void updateConfig(JsonObject json) {
+        config = gson.fromJson(json, PiConfig.class);
+        readConfig();
+    }
+
     public void updateConfig(String json) {
         config = gson.fromJson(json, PiConfig.class);
         readConfig();

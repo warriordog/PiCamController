@@ -38,7 +38,7 @@ function createFilelist(isVideo, divName, categoryName) {
                 html += "</div>";
 
                 html += "<div class=\"grid_item\">";
-                html += "<a href='/func/media/download?" + isVideo + "=" + entry.name + "'>[Download]</a>";
+                html += "<a href='/func/media/download?" + (isVideo ? 'v' :'p') + "=" + entry.name + "'>[Download]</a>";
                 html += "</div>";
 
                 html += "<div class=\"grid_item\">";
