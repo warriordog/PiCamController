@@ -127,18 +127,18 @@ const camera = {
 
     // sync filesystem
     syncFS : function(successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
-        this._sendGET("/func/fs/sync", successCallback, failureCallback, errorCallback);
+        this._sendGET("/func/admin/fs/sync", successCallback, failureCallback, errorCallback);
     },
     // remount filesystem
     remountFS : function(state, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
         let json = {
             state: state
         };
-        this._sendPOST("/func/fs/mount", json, successCallback, failureCallback, errorCallback);
+        this._sendPOST("/func/admin/fs/mount", json, successCallback, failureCallback, errorCallback);
     },
     // erase video cache
     eraseCache : function(successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
-        this._sendGET("/func/fs/clear_cache", json, successCallback, failureCallback, errorCallback);
+        this._sendGET("/func/admin/fs/clear_cache", json, successCallback, failureCallback, errorCallback);
     },
 
     // reset settings
