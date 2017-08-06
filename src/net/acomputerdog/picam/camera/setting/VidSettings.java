@@ -2,13 +2,13 @@ package net.acomputerdog.picam.camera.setting;
 
 public class VidSettings extends Settings {
     // camera mode, 0 is auto
-    public final int md = 2;
+    public final int md = 1;
 
     // width of picture (limited by mode)
-    public final int w = 2592;
+    public final int w = 1920;
 
     // height of picture (limited by mode)
-    public final int h = 1944;
+    public final int h = 1080;
 
     // frames per second, limited by mode
     public final int fps = 30;
