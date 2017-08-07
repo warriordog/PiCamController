@@ -29,7 +29,7 @@ const camera = {
             }
         };
         // network errors
-        req.onerror = errorCallback(req);
+        req.onerror = function() {errorCallback(req)};
         req.open("GET", uri, true); // true for asynchronous
         req.send();
     },
@@ -55,7 +55,7 @@ const camera = {
             }
         };
         // network errors
-        req.onerror = errorCallback(req);
+        req.onerror = function() {errorCallback(req)};
         req.open("POST", uri, true); // true for asynchronous
         req.send(JSON.stringify(json));
     },

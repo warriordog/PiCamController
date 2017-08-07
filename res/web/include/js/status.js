@@ -35,14 +35,17 @@ function updateLoop() {
 
             statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";
         }
+        window.setTimeout(updateLoop, 500);
     }, function (req, json) {
         statusDiv.innerHTML = "<div style=\"color: yellow\">unknown</div>";
+        window.setTimeout(updateLoop, 500);
     }, function (req, json) {
         statusDiv.innerHTML = "<div style=\"color: grey\">offline</div>";
+        window.setTimeout(updateLoop, 500);
     });
 }
 
 // start update loop
 {
-    updateLoopTimer = window.setTimeout(updateLoop, 500);
+    window.setTimeout(updateLoop, 500);
 }
