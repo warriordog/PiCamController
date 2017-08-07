@@ -39,6 +39,8 @@ public class VideoRecorder implements Recorder {
             cmd.add("-n");
             camera.getVidSettings().addToCommandLine(cmd);
 
+            System.out.printf("Command line: '%s'\n", toString(cmd));
+
             ProcessBuilder pb = new ProcessBuilder();
             pb.command(cmd);
             pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
@@ -107,5 +109,17 @@ public class VideoRecorder implements Recorder {
     @Override
     public File getRecordFile() {
         return recordFile;
+    }
+
+    private static String toString(List<String> list) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                builder.append(' ');
+            }
+            String str = list.get(i);
+            builder.append(str);
+        }
+        return builder.toString();
     }
 }
