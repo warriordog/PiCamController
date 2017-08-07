@@ -124,7 +124,7 @@ public abstract class WebHandler implements HttpHandler {
         byte[] buff = new byte[128];
 
         // autocloses out
-        try (OutputStream out = exchange.getResponseBody();) {
+        try (OutputStream out = exchange.getResponseBody()) {
 
             while (in.available() > 0) {
                 int count = in.read(buff);

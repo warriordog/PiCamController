@@ -29,5 +29,5 @@ public class PicSettings extends Settings {
     public boolean bm = true;
 
     // rotation (0, 90, 180, 270)
-    public final int rot = 0;
+    public int rot = 0;
 }

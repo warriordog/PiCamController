@@ -47,6 +47,6 @@ public class VidSettings extends Settings {
     public String ex = "antishake";
 
     // rotation (0, 90, 180, 270)
-    public final int rot = 0;
+    public int rot = 0;
 
 }
