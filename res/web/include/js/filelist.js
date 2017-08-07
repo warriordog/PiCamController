@@ -1,87 +1,69 @@
 // embed a file list
-function createFilelist(fileType, divName, categoryName) {
-    var div = document.getElementById(divName);
+function createFilelist(isVideo, divName, categoryName) {
+    let div = document.getElementById(divName);
     div.innerHTML = "";
 
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = function () {
-        if (req.readyState === 4) {
-            if (req.status === 200) {
-                var respArray = req.responseText.split("|");
+    camera.getFileList(isVideo, function (req, json) {
+        let html = "";
 
-                var html = "";
-                html += "<div class='inner_grid_row'>";
-                html += "<div class='grid_item_title'>";
-                html += categoryName + " files:";
+        if (json.hasOwnProperty("files")) {
+            html += "<div class='inner_grid_row'>";
+            html += "<div class='grid_item_title'>";
+            html += categoryName + " files:";
+            html += "</div>";
+            html += "<div class='grid_item'>";
+            html += "<input type='button' value='Close' onclick=\"hideElementID('" + divName + "')\">";
+            html += "</div>";
+            html += "</div>";
+
+            for (let i in json.files) {
+                let entry = json.files[i];
+
+                html += "<div class=\"inner_grid_row\" style='flex-wrap: nowrap'>";
+
+                html += "<div class=\"grid_item\" style='flex-grow: 1'>";
+                html += entry.name;
                 html += "</div>";
-                html += "<div class='grid_item'>";
-                html += "<input type='button' value='Close' onclick=\"hideElementID('" + divName + "')\">";
+
+                html += "<div class=\"grid_item\">";
+                html += entry.size;
                 html += "</div>";
+
+                html += "<div class=\"grid_item\">";
+                html += entry.modified;
                 html += "</div>";
 
-                for (var i = 0; i < respArray.length; i++) {
-                    var entry = respArray[i];
-                    var entryParts = entry.split(",");
-                    if (entryParts.length === 3) {
-                        var fileName = entryParts[0];
-                        var fileSize = entryParts[1];
-                        var fileTime = entryParts[2];
+                html += "<div class=\"grid_item\">";
+                html += "<a href='#' onclick=\"showPreview('" + (isVideo ? 'v' :'p') + "', '" + entry.name + "')\">[Preview]</a>";
+                html += "</div>";
 
-                        html += "<div class=\"inner_grid_row\" style='flex-wrap: nowrap'>";
+                html += "<div class=\"grid_item\">";
+                html += "<a href='/func/media/download?" + (isVideo ? 'v' :'p') + "=" + entry.name + "'>[Download]</a>";
+                html += "</div>";
 
-                        html += "<div class=\"grid_item\" style='flex-grow: 1'>";
-                        html += fileName;
-                        html += "</div>";
+                html += "<div class=\"grid_item\">";
+                html += "<a href='#' onclick=\"deleteFile('" + isVideo + "', '" + entry.name + "', '" + divName + "', '" + categoryName + "')\">[Delete]</a>";
+                html += "</div>";
 
-                        html += "<div class=\"grid_item\">";
-                        html += fileSize;
-                        html += "</div>";
+                html += "</div>";
 
-                        html += "<div class=\"grid_item\">";
-                        html += fileTime;
-                        html += "</div>";
-
-                        html += "<div class=\"grid_item\">";
-                        html += "<a href='#' onclick=\"showPreview('" + fileType+ "', '" + fileName + "')\">[Preview]</a>";
-                        html += "</div>";
-
-                        html += "<div class=\"grid_item\">";
-                        html += "<a href='/func/media/download?" + fileType + "=" + fileName + "'>[Download]</a>";
-                        html += "</div>";
-
-                        html += "<div class=\"grid_item\">";
-                        html += "<a href='#' onclick=\"deleteFile('" + fileType + "', '" + fileName + "', '" + divName + "', '" + categoryName + "')\">[Delete]</a>";
-                        html += "</div>";
-
-                        html += "</div>";
-                    } else {
-                        console.log("Server sent invalid file entry: " + entry)
-                    }
-                }
-
-                div.innerHTML = html;
             }
+        } else {
+            html += "Server error.";
+            console.log("Server sent invalid file list");
         }
-    };
-    req.open("GET", "/func/media/list?" + fileType, true); // true for asynchronous
-    req.send();
+
+        div.innerHTML = html;
+    });
 }
 
 // delete a file
-function deleteFile(fileType, fileName, divName, categoryName) {
-    var req = new XMLHttpRequest();
-    var div = document.getElementById(divName);
-
-    req.onreadystatechange = function () {
-        if (req.readyState === 4) {
-            if (req.status === 200) {
-                // if list is still open, then rebuild without deleted file
-                if (div.style.display != "none") {
-                    createFilelist(fileType, divName, categoryName)
-                }
-            }
+function deleteFile(isVideo, fileName, divName, categoryName) {
+    camera.deleteFile(isVideo, fileName, function (req, json) {
+        let div = document.getElementById(divName);
+        // if list is still open, then rebuild without deleted file
+        if (div.style.display !== "none") {
+            createFilelist(isVideo, divName, categoryName)
         }
-    };
-    req.open("POST", "/func/media/delete", true); // true for asynchronous
-    req.send(fileType + "|" + fileName);
+    });
 }

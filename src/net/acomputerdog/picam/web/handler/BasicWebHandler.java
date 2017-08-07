@@ -12,7 +12,7 @@ public class BasicWebHandler extends WebHandler {
     @Override
     public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
         handler.accept();
-        sendResponse("200 OK", 200, e);
+        sendSimpleResponse("200 OK", 200, e);
     }
 
     public interface BasicExchangeAcceptor {

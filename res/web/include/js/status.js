@@ -1,73 +1,51 @@
 // get version
 {
-    var versionDiv = document.getElementById("controller_version");
+    let versionDiv = document.getElementById("controller_version");
     if (versionDiv !== null) {
-        var req = new XMLHttpRequest();
-        req.onreadystatechange = function () {
-            if (req.readyState === 4) {
-                if (req.status === 200) {
-                    versionDiv.innerHTML = req.responseText;
-                }
-            }
-        };
-        req.open("GET", "/func/admin/version", true); // true for asynchronous
-        req.send();
+        camera.getVersionString(function (req, json) {
+            versionDiv.innerHTML = json.version;
+        });
     }
 }
 
-// interval for update loop
-var updateLoopInterval = 500;
-// timer for update loop
-var updateLoopTimer;
-
 // update status
 function updateLoop() {
-    var statusDiv = document.getElementById("cam_status");
-    var progressDiv = document.getElementById("rec_progress_div");
-    var pathDiv = document.getElementById("recording_path");
-    var timeDiv = document.getElementById("recording_time");
-    var recordDiv = document.getElementById("record_row");
+    let statusDiv = document.getElementById("cam_status");
+    let progressDiv = document.getElementById("rec_progress_div");
 
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = function () {
-        if (req.readyState === 4) {
-            if (req.status === 200) {
-                var respLine = req.responseText;
-                var respArray = respLine.split("|");
+    camera.getRecordStatus(function (req, json) {
+        // record status
+        if (json.is_recording) {
+            let pathDiv = document.getElementById("recording_path");
+            let timeDiv = document.getElementById("recording_time");
 
-                if (respArray.length === 3) {
-                    // record status
-                    if (respArray[0] === "1") {
-                        statusDiv.innerHTML = "<div style=\"color: red\">recording</div>";
-                        pathDiv.innerHTML = respArray[1];
-                        timeDiv.innerHTML = (respArray[2] / 1000) + "s";
+            statusDiv.innerHTML = "<div style=\"color: red\">recording</div>";
+            pathDiv.innerHTML = json.recording_path;
+            timeDiv.innerHTML = (json.recording_time / 1000) + "s";
 
-                        showFlexElement(progressDiv);
-                    } else {
-                        // if progress is visible, then we were recording
-                        if (progressDiv.style.display !== "none") {
-                            hideElement(progressDiv);
-                            showFlexElement(recordDiv);
-                        }
+            showFlexElement(progressDiv);
+        } else {
+            let recordDiv = document.getElementById("record_row");
 
-                        statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";
-                    }
-                } else {
-                    console.debug("server returned invalid status array: wrong length");
-                }
+            // if progress is visible, then we were recording
+            if (isFlexVisible(progressDiv)) {
+                hideElement(progressDiv);
+                showFlexElement(recordDiv);
             }
 
-            updateLoopTimer = window.setTimeout(updateLoop, updateLoopInterval);
+            statusDiv.innerHTML = "<div style=\"color: green\">idle</div>";
         }
-    };
-    req.onerror = function () {
+        window.setTimeout(updateLoop, 500);
+    }, function (req, json) {
         statusDiv.innerHTML = "<div style=\"color: yellow\">unknown</div>";
-    };
-    req.open("GET", "/func/record/status", true); // true for asynchronous
-    req.send();
+        window.setTimeout(updateLoop, 500);
+    }, function (req, json) {
+        statusDiv.innerHTML = "<div style=\"color: grey\">offline</div>";
+        window.setTimeout(updateLoop, 500);
+    });
 }
 
 // start update loop
 {
-    updateLoopTimer = window.setTimeout(updateLoop, updateLoopInterval);
+    window.setTimeout(updateLoop, 500);
 }

@@ -35,14 +35,17 @@
             }
 
             function showSettings() {
-                var vidSettings = document.getElementById("vid_defaults_field");
-                var snapSettings = document.getElementById("snap_defaults_field");
-                var configField = document.getElementById("picam_config_text");
-
                 showFlexElementID("settings_div");
-                populateCamSettings('v', vidSettings);
-                populateCamSettings('p', snapSettings);
-                getSystemSettings(configField);
+
+                camera.getCamSettings(true, function(req, json) {
+                    document.getElementById("vid_defaults_field").value = JSON.stringify(json.settings);
+                });
+                camera.getCamSettings(false, function(req, json) {
+                    document.getElementById("snap_defaults_field").value = JSON.stringify(json.settings);
+                });
+                camera.getSystemSettings(function(req, json) {
+                    document.getElementById("picam_config_text").value = JSON.stringify(json.settings);
+                });
             }
 
             function hideSettings() {
@@ -50,15 +53,15 @@
             }
 
             function showVideos() {
-                var divName = "video_list_div";
+                let divName = "video_list_div";
                 showFlexElementID(divName);
-                createFilelist("v", divName, "Video");
+                createFilelist(true, divName, "Video");
             }
 
             function showSnapshots() {
-                var divName = "snapshot_list_div";
+                let divName = "snapshot_list_div";
                 showFlexElementID(divName);
-                createFilelist("p", divName, "Snapshot");
+                createFilelist(false, divName, "Snapshot");
             }
 
             function closeSnapPreview() {
@@ -68,10 +71,9 @@
             /*
                 Trigger camera functions
              */
-
             function startRecord() {
-                var time = document.getElementById("record_time").value;
-                var path = document.getElementById("record_text").value;
+                let time = document.getElementById("record_time").value;
+                let path = document.getElementById("record_text").value;
 
                 if (isNaN(time)) {
                     showFlexElementID("invalid_time_div");
@@ -80,30 +82,26 @@
                     hideSnapSettings();
                     hideElementID("record_row");
 
-                    sendStartRecording(time, path);
+                    camera.recordVideo(time, path);
                 }
             }
 
             function takeSnapshot() {
-                sendTakeSnapshot(document.getElementById("snapshot_name").value);
-            }
-
-            function resetVidSettings() {
-                resetCamSettings('v', document.getElementById("vid_defaults_field"));
-            }
-
-            function resetSnapSettings() {
-                resetCamSettings('p', document.getElementById("snap_defaults_field"));
+                camera.recordSnapshot(document.getElementById("snapshot_name").value, function (req, json){
+                    camera.getSnapshotPreview(function (req, json){
+                       showPreview('p', json.name);
+                    });
+                });
             }
 
             function showPreview(filetype, filename) {
                 if (filetype === 'p') {
-                    var img = document.getElementById("preview_snap_img");
+                    let img = document.getElementById("preview_snap_img");
                     img.src = "/func/media/download?p=" + filename;
 
                     showFlexElementID("preview_snap_div");
                 } else if (filetype === 'v') {
-                    var vid = document.getElementById("preview_vid_img");
+                    let vid = document.getElementById("preview_vid_img");
                     vid.src = "/func/media/stream?" + filename;
 
                     showFlexElementID("preview_vid_div");
@@ -116,30 +114,50 @@
                 hideElementID("preview_vid_div");
             }
 
+            function resetVidSettings() {
+                camera.resetCamSettings(true, function() {
+                    populateCamSettings(true, document.getElementById("vid_defaults_field"));
+                });
+            }
+
+            function resetSnapSettings() {
+                camera.resetCamSettings(false, function() {
+                    populateCamSettings(true, document.getElementById("snap_defaults_field"));
+                });
+            }
+
+            function populateCamSettings(isVideo, field) {
+                camera.getCamSettings(isVideo, function(req, json) {
+                    field.value = JSON.stringify(json);
+                });
+            }
+
             function resetPiCamConfig() {
-                var text = document.getElementById("picam_config_text");
-                text.value = "";
-                sendResetSystemSettings(text);
+                camera.resetSystemSettings(function () {
+                    populateSystemSettings();
+                });
+            }
+
+            function populateSystemSettings() {
+                camera.getSystemSettings(function (req, json) {
+                    let text = document.getElementById("picam_config_text");
+                    text.value = JSON.stringify(json);
+                });
             }
 
             function applyPiCamConfig() {
-                var text = document.getElementById("picam_config_text");
-                sendApplySystemSettings(text.value);
-            }
-
-            function savePiCamConfig() {
-                applyPiCamConfig();
-                sendSaveSystemSettings();
+                let text = document.getElementById("picam_config_text");
+                camera.applySystemSettings(text.value);
             }
 
             function saveVidSettings() {
-                var field = document.getElementById("vid_defaults_field");
-                sendSaveCamSettings('v', field.value);
+                let field = document.getElementById("vid_defaults_field");
+                camera.applyCamSettings(true, field.value);
             }
 
             function saveSnapSettings() {
-                var field = document.getElementById("snap_defaults_field");
-                sendSaveCamSettings('p', field.value);
+                let field = document.getElementById("snap_defaults_field");
+                camera.applyCamSettings(false, field.value);
             }
         </script>
 
@@ -240,7 +258,7 @@
                     N/A
                 </div>
                 <div class="grid_item">
-                    <input type="button" value="Stop" onclick="sendStopRecording()">
+                    <input type="button" value="Stop" onclick="camera.stopRecording()">
                 </div>
             </div>
 
@@ -400,7 +418,7 @@
                         <input type="button" value="Apply" onclick="applyPiCamConfig()">
                     </div>
                     <div class="grid_item">
-                        <input type="button" value="Save" onclick="savePiCamConfig()">
+                        <input type="button" value="Save" onclick="camera.saveSystemSettings()">
                     </div>
                 </div>
                 <!-- Config file contents -->
@@ -429,15 +447,15 @@
                     </div>
                     <!-- Exit -->
                     <div class="grid_item">
-                        <input type="button" value="Exit" onclick="sendExitProgram()">
+                        <input type="button" value="Exit" onclick="camera.exitProgram()">
                     </div>
                     <!-- Reboot -->
                     <div class="grid_item">
-                        <input type="button" value="Reboot" onclick="sendRebootSystem()">
+                        <input type="button" value="Reboot" onclick="camera.rebootPi()">
                     </div>
                     <!-- Shutdown -->
                     <div class="grid_item">
-                        <input type="button" value="Shutdown" onclick="sendShutdownSystem()">
+                        <input type="button" value="Shutdown" onclick="camera.shutdownPi()">
                     </div>
                 </div>
                 <!-- Filesystem controls -->
@@ -447,19 +465,19 @@
                     </div>
                     <!-- Clear cachr -->
                     <div class="grid_item">
-                        <input type="button" value="Erase Cache" onclick="sendEraseCache()">
+                        <input type="button" value="Erase Cache" onclick="camera.eraseCache()">
                     </div>
                     <!-- Mount RO -->
                     <div class="grid_item">
-                        <input type="button" value="Mount R/O" onclick="sendMountFS(0)">
+                        <input type="button" value="Mount R/O" onclick="camera.remountFS(false)">
                     </div>
                     <!-- Mount RW -->
                     <div class="grid_item">
-                        <input type="button" value="Mount R/W" onclick="sendMountFS(1)">
+                        <input type="button" value="Mount R/W" onclick="camera.remountFS(true)">
                     </div>
                     <!-- Synchronise FS -->
                     <div class="grid_item">
-                        <input type="button" value="Sync" onclick="sendFSSync()">
+                        <input type="button" value="Sync" onclick="camera.syncFS()">
                     </div>
                 </div>
             </div>
@@ -499,8 +517,8 @@
         </div>
 
         <script src="/include/js/common.js"></script>
+        <script src="/include/js/camera.js"></script>
         <script src="/include/js/status.js"></script>
-        <script src="/include/js/commands.js"></script>
         <script src="/include/js/filelist.js"></script>
     </body>
 </html>

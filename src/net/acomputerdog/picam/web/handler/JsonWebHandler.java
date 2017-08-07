@@ -1,21 +1,43 @@
 package net.acomputerdog.picam.web.handler;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class SimpleWebHandler extends WebHandler {
-    private final SimpleExchangeAcceptor handler;
+public class JsonWebHandler extends WebHandler {
+    private final JsonExchangeAcceptor handler;
+    private final JsonParser parser;
 
-    public SimpleWebHandler(SimpleExchangeAcceptor handler) {
+    public JsonWebHandler(JsonExchangeAcceptor handler) {
         this.handler = handler;
+        parser = new JsonParser();
     }
 
     @Override
     public void handleExchange(HttpExchange e, String getData, String postData) throws Exception {
-        handler.accept(this, e);
+        JsonObject json = null;
+        try {
+            json = parser.parse(postData).getAsJsonObject();
+        } catch (IllegalStateException | JsonParseException ex) {
+            sendSimpleResponse("400 Malformed Input: invalid JSON", 400, e);
+        }
+
+        if (json != null) {
+            try {
+                handler.accept(this, e, json);
+            } catch (ClassCastException ex) {
+                sendSimpleResponse("400 Malformed Input: field is wrong type", 400, e);
+            }
+        }
+    }
+
+    @Override
+    public boolean acceptRequest(HttpExchange e) {
+        return "POST".equals(e.getRequestMethod());
     }
 
     // make public so handlers can send responses
@@ -48,7 +70,7 @@ public class SimpleWebHandler extends WebHandler {
         super.redirect(path, exchange);
     }
 
-    public interface SimpleExchangeAcceptor {
-        void accept(SimpleWebHandler handler, HttpExchange e) throws Exception;
+    public interface JsonExchangeAcceptor {
+        void accept(JsonWebHandler handler, HttpExchange e, JsonObject jsonData) throws Exception;
     }
 }

@@ -1,64 +1,52 @@
 package net.acomputerdog.picam.camera.setting;
 
-import java.util.ArrayList;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
 
-public class Settings {
-    protected final SettingsList list = new SettingsList();
-
+public abstract class Settings {
     public void addToCommandLine(List<String> cmd) {
-        for (Setting setting : list.getAllSettings()) {
-            if (setting.isIncluded()) {
-                cmd.add("-" + setting.getKey());
-
-                if (setting.getValue() != null) {
-                    cmd.add(setting.getValue());
+        for (Field f : getClass().getDeclaredFields()) {
+            try {
+                if (!Modifier.isTransient(f.getModifiers())) {
+                    // boolean fields have no value
+                    if (f.getType().equals(boolean.class)) {
+                        if ((Boolean) f.get(this)) {
+                            cmd.add("-" + f.getName());
+                        }
+                    } else {
+                        cmd.add("-" + f.getName());
+                        cmd.add(String.valueOf(f.get(this)));
+                    }
                 }
+            } catch (IllegalAccessException ignored) {
+                //don't worry about private fields
+            } catch (Exception e) {
+                System.err.println("Error reading setting field");
+                e.printStackTrace();
             }
         }
     }
 
-    public String[] addToCommandLine() {
-        List<String> cmd = new ArrayList<>();
-        addToCommandLine(cmd);
-        return cmd.toArray(new String[cmd.size()]);
-    }
-
-    public void addSettingPairs(String[] pairs) {
-        for (String pair : pairs) {
-            int split = pair.indexOf('=');
-            String key;
-            String val;
-            if (split > -1) {
-                // key and value
-                if (pair.length() - split > 1) {
-                    key = pair.substring(0, split);
-                    val = pair.substring(split + 1);
-                // key with no value, but still an '='
-                } else if (pair.length() > 1) {
-                    // delete trailing eq
-                    key = pair.substring(0, pair.length() - 1);
-                    val = null;
-                // just a value, which not supported
-                } else {
-                    key = null;
-                    val = null;
+    public void mixIn(Settings settings) {
+        for (Field f : settings.getClass().getDeclaredFields()) {
+            try {
+                if (!Modifier.isTransient(f.getModifiers())) {
+                    try {
+                        Field mine = getClass().getDeclaredField(f.getName());
+                        if (!Modifier.isTransient(mine.getModifiers())) {
+                            mine.set(this, f.get(settings));
+                        }
+                    } catch (NoSuchFieldException ignored) {
+                        // it throws this instead of returning null
+                    }
                 }
-            // just a key
-            } else {
-                key = pair;
-                val = null;
-            }
-            Setting setting = list.getSetting(key);
-            if (setting != null) {
-                setting.setValue(val);
-            } else {
-                System.out.println("Ignoring unknown setting pair: " + pair);
+            } catch (IllegalAccessException ignored) {
+                //don't worry about private fields
+            } catch (Exception e) {
+                System.err.println("Error reading setting field");
+                e.printStackTrace();
             }
         }
-    }
-
-    public SettingsList getList() {
-        return list;
     }
 }

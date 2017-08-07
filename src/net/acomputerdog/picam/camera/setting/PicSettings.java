@@ -2,32 +2,32 @@ package net.acomputerdog.picam.camera.setting;
 
 public class PicSettings extends Settings {
     // camera mode, 0 is auto
-    public final Setting camMode = new Setting(list, "md", 2);
+    public int md = 2;
 
     // width of picture (limited by mode)
-    public final Setting width = new Setting(list, "w", 2592);
+    public int w = 2592;
 
     // height of picture (limited by mode)
-    public final Setting height = new Setting(list, "h", 1944);
+    public int h = 1944;
 
-    // video stabilization
-    public final ValuelessSetting stabilization = new ValuelessSetting(list, "vs", null);
+    // video stabilization (true = -vs, false = nothing)
+    public boolean vs = false;
 
     // average white balance
-    public final Setting awb = new Setting(list, "awb", "fluorescent");
+    public String awb = "auto";
 
     // dynamic range compensation
-    public final Setting drc = new Setting(list, "drc", "med");
+    public String drc = "med";
 
     // exposure mode
-    public final Setting exposure = new Setting(list, "ex", "antishake");
+    public String ex = "antishake";
 
     // JPG quality
-    public final Setting quality = new Setting(list, "q", "90");
+    public int q = 90;
 
     // frameburst mode
-    public final ValuelessSetting frameburst = new ValuelessSetting(list, "bm", true);
+    public boolean bm = true;
 
     // rotation (0, 90, 180, 270)
-    public final Setting rotation = new Setting(list, "rot", 0);
+    public final int rot = 0;
 }
