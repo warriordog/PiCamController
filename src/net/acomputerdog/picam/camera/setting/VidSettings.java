@@ -26,7 +26,7 @@ public class VidSettings extends Settings {
     public String pf = "high";
 
     // h264 level
-    // public String lev = null;
+    public String lev = "4.1";
 
     // include inline headers
     public boolean ih = true;
@@ -38,7 +38,7 @@ public class VidSettings extends Settings {
     public boolean vs = false;
 
     // average white balance
-    public String awb = "fluorescent";
+    public String awb = "auto";
 
     // dynamic range compensation
     public String drc = "med";

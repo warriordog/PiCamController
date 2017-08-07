@@ -14,7 +14,7 @@ public class PicSettings extends Settings {
     public boolean vs = false;
 
     // average white balance
-    public String awb = "fluorescent";
+    public String awb = "auto";
 
     // dynamic range compensation
     public String drc = "med";
