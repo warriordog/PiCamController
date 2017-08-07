@@ -3,7 +3,26 @@ const camera = {
     // "private" variables
     _defaultSuccessCallback : function(req, json) {},
     _defaultFailureCallback : function(req, json) {},
-    _defaultErrorCallback : function(req) {},
+    _defaultErrorCallback : function(req, error) {},
+
+    /*
+    General functions
+     */
+    setDefaultSuccessCallback : function(callback) {
+        if (callback !== undefined) {
+            this._defaultSuccessCallback = callback;
+        }
+    },
+    setDefaultFailureCallback : function(callback) {
+        if (callback !== undefined) {
+            this._defaultFailureCallback = callback;
+        }
+    },
+    setDefaultErrorCallback : function(callback) {
+        if (callback !== undefined) {
+            this._defaultErrorCallback = callback;
+        }
+    },
 
     /*
      network functions
@@ -24,12 +43,12 @@ const camera = {
                     }
                 } catch (e) {
                     // json errors
-                    errorCallback(req);
+                    errorCallback(req, e);
                 }
             }
         };
         // network errors
-        req.onerror = function() {errorCallback(req)};
+        req.onerror = function(error) {errorCallback(req, error)};
         req.open("GET", uri, true); // true for asynchronous
         req.send();
     },
@@ -50,12 +69,12 @@ const camera = {
                     }
                 } catch (e) {
                     // json errors
-                    errorCallback(req);
+                    errorCallback(req, e);
                 }
             }
         };
         // network errors
-        req.onerror = function() {errorCallback(req)};
+        req.onerror = function(error) {errorCallback(req, error)};
         req.open("POST", uri, true); // true for asynchronous
         req.send(JSON.stringify(json));
     },

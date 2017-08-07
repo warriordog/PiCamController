@@ -34,21 +34,12 @@
                 hideRecordSettings();
             }
 
-            function showSettings() {
+            function showSystemSettings() {
                 showFlexElementID("settings_div");
-
-                camera.getCamSettings(true, function(req, json) {
-                    document.getElementById("vid_defaults_field").value = JSON.stringify(json.settings);
-                });
-                camera.getCamSettings(false, function(req, json) {
-                    document.getElementById("snap_defaults_field").value = JSON.stringify(json.settings);
-                });
-                camera.getSystemSettings(function(req, json) {
-                    document.getElementById("picam_config_text").value = JSON.stringify(json.settings);
-                });
+                populateSystemSettings();
             }
 
-            function hideSettings() {
+            function hideSystemSettings() {
                 hideElementID("settings_div");
             }
 
@@ -140,7 +131,7 @@
             }
             */
 
-            function resetPiCamConfig() {
+            function resetSystemSettings() {
                 camera.resetSystemSettings(function () {
                     populateSystemSettings();
                 });
@@ -148,14 +139,52 @@
 
             function populateSystemSettings() {
                 camera.getSystemSettings(function (req, json) {
-                    let text = document.getElementById("picam_config_text");
-                    text.value = JSON.stringify(json);
+                    document.getElementById("system_setting_prim_name").value = json.settings.primaryWifi.ssid;
+                    document.getElementById("system_setting_prim_pass").value = json.settings.primaryWifi.passcode;
+                    document.getElementById("system_setting_prim_dhcp").checked = json.settings.primaryWifi.dhcpEnabled;
+                    document.getElementById("system_setting_prim_netmask").value = json.settings.primaryWifi.netmask;
+                    document.getElementById("system_setting_prim_gateway").value = json.settings.primaryWifi.gateway;
+                    document.getElementById("system_setting_prim_address").value = json.settings.primaryWifi.address;
+
+                    document.getElementById("system_setting_sec_name").value = json.settings.secondaryWifi.ssid;
+                    document.getElementById("system_setting_sec_pass").value = json.settings.secondaryWifi.passcode;
+                    document.getElementById("system_setting_sec_dhcp").checked = json.settings.secondaryWifi.dhcpEnabled;
+                    document.getElementById("system_setting_sec_netmask").value = json.settings.secondaryWifi.netmask;
+                    document.getElementById("system_setting_sec_gateway").value = json.settings.secondaryWifi.gateway;
+                    document.getElementById("system_setting_sec_address").value = json.settings.secondaryWifi.address;
                 });
             }
 
-            function applyPiCamConfig() {
-                let text = document.getElementById("picam_config_text");
-                camera.applySystemSettings(text.value);
+            function applySystemSettings(callback = function() {}) {
+                let prim = {
+                    ssid: document.getElementById("system_setting_prim_name").value,
+                    passcode: document.getElementById("system_setting_prim_pass").value,
+                    dhcpEnabled: document.getElementById("system_setting_prim_dhcp").checked,
+                    netmask: document.getElementById("system_setting_prim_netmask").value,
+                    gateway: document.getElementById("system_setting_prim_gateway").value,
+                    address: document.getElementById("system_setting_prim_address").value
+                };
+
+                let sec = {
+                    ssid: document.getElementById("system_setting_sec_name").value,
+                    passcode: document.getElementById("system_setting_sec_pass").value,
+                    dhcpEnabled: document.getElementById("system_setting_sec_dhcp").checked,
+                    netmask: document.getElementById("system_setting_sec_netmask").value,
+                    gateway: document.getElementById("system_setting_sec_gateway").value,
+                    address: document.getElementById("system_setting_sec_address").value
+                };
+
+                let settings = {
+                    primaryWifi: prim,
+                    secondaryWifi: sec
+                };
+                camera.applySystemSettings(settings, callback);
+            }
+
+            function saveSystemSettings() {
+                applySystemSettings(function() {
+                    camera.saveSystemSettings();
+                });
             }
 
             function resetVidSettings() {
@@ -831,7 +860,7 @@
                 </div>
                 <!-- Settings -->
                 <div class="grid_item">
-                    <input type="button" value="Settings" onclick="showSettings()">
+                    <input type="button" value="Settings" onclick="showSystemSettings()">
                 </div>
             </div>
 
@@ -840,31 +869,128 @@
                 <!-- Title row -->
                 <div class="inner_grid_row">
                     <div class="grid_item_title">
-                        Camera settings:
+                        System settings:
                     </div>
                     <div class="grid_item">
-                        <input type="button" value="Close" onclick="hideSettings()">
+                        <input type="button" value="Reset" onclick="resetSystemSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Apply" onclick="applySystemSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Save" onclick="saveSystemSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="hideSystemSettings()">
                     </div>
                 </div>
-                <!-- Config header -->
+                <!-- System primary wifi name -->
                 <div class="inner_grid_row">
-                    <div class="grid_item_title">
-                        PiCam config:
+                    <div class="grid_item_long">
+                        Primary WiFi name:
                     </div>
                     <div class="grid_item">
-                        <input type="button" value="Reset" onclick="resetPiCamConfig()">
-                    </div>
-                    <div class="grid_item">
-                        <input type="button" value="Apply" onclick="applyPiCamConfig()">
-                    </div>
-                    <div class="grid_item">
-                        <input type="button" value="Save" onclick="camera.saveSystemSettings()">
+                        <input id="system_setting_prim_name"/>
                     </div>
                 </div>
-                <!-- Config file contents -->
+                <!-- System primary wifi pass -->
                 <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Primary WiFi password:
+                    </div>
                     <div class="grid_item">
-                        <textarea id="picam_config_text" cols="60" rows="20"></textarea>
+                        <input type="password" id="system_setting_prim_pass"/>
+                    </div>
+                </div>
+                <!-- Primary wifi DHCP setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Primary WiFi DHCP:
+                    </div>
+                    <div class="grid_item">
+                        <input type="checkbox" id="system_setting_prim_dhcp" value="">
+                    </div>
+                </div>
+                <!-- System primary wifi netmask -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Primary WiFi netmask:
+                    </div>
+                    <div class="grid_item">
+                        <input id="system_setting_prim_netmask"/>
+                    </div>
+                </div>
+                <!-- System primary wifi gateway -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Primary WiFi gateway:
+                    </div>
+                    <div class="grid_item">
+                        <input id="system_setting_prim_gateway"/>
+                    </div>
+                </div>
+                <!-- System primary wifi address -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Primary WiFi static IP:
+                    </div>
+                    <div class="grid_item">
+                        <input id="system_setting_prim_address"/>
+                    </div>
+                </div>
+
+                <!-- System secondary wifi name -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Secondary WiFi name:
+                    </div>
+                    <div class="grid_item">
+                        <input id="system_setting_sec_name"/>
+                    </div>
+                </div>
+                <!-- System secondary wifi pass -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Secondary WiFi password:
+                    </div>
+                    <div class="grid_item">
+                        <input type="password" id="system_setting_sec_pass"/>
+                    </div>
+                </div>
+                <!-- Secondary wifi DHCP setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Secondary WiFi DHCP:
+                    </div>
+                    <div class="grid_item">
+                        <input type="checkbox" id="system_setting_sec_dhcp" value="">
+                    </div>
+                </div>
+                <!-- System secondary wifi netmask -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Secondary WiFi netmask:
+                    </div>
+                    <div class="grid_item">
+                        <input id="system_setting_sec_netmask"/>
+                    </div>
+                </div>
+                <!-- System secondary wifi gateway -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Secondary WiFi gateway:
+                    </div>
+                    <div class="grid_item">
+                        <input id="system_setting_sec_gateway"/>
+                    </div>
+                </div>
+                <!-- System secondary wifi address -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Secondary WiFi static IP:
+                    </div>
+                    <div class="grid_item">
+                        <input id="system_setting_sec_address"/>
                     </div>
                 </div>
             </div>
@@ -960,5 +1086,14 @@
         <script src="/include/js/camera.js"></script>
         <script src="/include/js/status.js"></script>
         <script src="/include/js/filelist.js"></script>
+
+        <script type="text/javascript">
+            camera.setDefaultFailureCallback(function (req, json) {
+                console.error("Unhandled request failure (code " + req.status + "): " + JSON.stringify(json));
+            });
+            camera.setDefaultErrorCallback(function (req, error) {
+                console.error("Unhandled request error: " + error);
+            });
+        </script>
     </body>
 </html>

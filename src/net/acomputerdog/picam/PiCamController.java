@@ -13,6 +13,7 @@ import net.acomputerdog.picam.system.net.Network;
 import net.acomputerdog.picam.web.WebServer;
 
 import java.io.*;
+import java.util.Map;
 
 public class PiCamController {
 
@@ -155,8 +156,16 @@ public class PiCamController {
         config = PiConfig.createDefault();
     }
 
-    public void updateConfig(JsonObject json) {
-        config = gson.fromJson(json, PiConfig.class);
+    public void updateConfig(JsonObject newJson) {
+        JsonObject configJson = gson.toJsonTree(config).getAsJsonObject();
+        // mix old and new config
+        for (Map.Entry<String, JsonElement> entry : configJson.entrySet()) {
+            if (newJson.has(entry.getKey())) {
+                entry.setValue(newJson.get(entry.getKey()));
+            }
+        }
+
+        config = gson.fromJson(configJson, PiConfig.class);
         readConfig();
     }
 
