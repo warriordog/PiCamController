@@ -101,7 +101,7 @@ const camera = {
             if (req.status === 202) {
                 if (numTries < 60) {
                     window.setTimeout(function () {
-                        this.getSnapshotPreview(successCallback, failureCallback, errorCallback, numTries + 1)
+                        camera.getSnapshotPreview(successCallback, failureCallback, errorCallback, numTries + 1);
                     }, 500);
                 } else {
                     failureCallback(req, json);

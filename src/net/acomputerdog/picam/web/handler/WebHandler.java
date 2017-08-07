@@ -86,7 +86,7 @@ public abstract class WebHandler implements HttpHandler {
     public abstract void handleExchange(HttpExchange e, String getData, String postData) throws Exception;
 
     protected void sendSimpleResponse(String message, int code, HttpExchange e) throws IOException {
-        sendResponse("{\"message:\"" + message + "\"}", code, e);
+        sendResponse("{\"message\":\"" + message.replace("\"", "\\\"") + "\"}", code, e);
     }
 
     protected void sendOKJson(JsonObject object, HttpExchange e) throws IOException {
