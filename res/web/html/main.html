@@ -17,7 +17,7 @@
                 hideElementID("invalid_time_div");
             }
 
-            function hideSnapSettings() {
+            function hideTakeSnap() {
                 hideElementID("snapshot_div");
             }
 
@@ -25,10 +25,10 @@
                 showFlexElementID("start_settings_div");
                 hideElementID("invalid_time_div");
 
-                hideSnapSettings();
+                hideTakeSnap();
             }
 
-            function showSnapshot() {
+            function showTakeSnapshot() {
                 showFlexElementID("snapshot_div");
 
                 hideRecordSettings();
@@ -79,7 +79,7 @@
                     showFlexElementID("invalid_time_div");
                 } else {
                     hideRecordSettings();
-                    hideSnapSettings();
+                    hideTakeSnap();
                     hideElementID("record_row");
 
                     camera.recordVideo(time, path);
@@ -114,23 +114,31 @@
                 hideElementID("preview_vid_div");
             }
 
-            function resetVidSettings() {
-                camera.resetCamSettings(true, function() {
-                    populateCamSettings(true, document.getElementById("vid_defaults_field"));
-                });
+            function showVideoSettings() {
+                showFlexElementID("vid_settings_div");
+                populateVidSettings();
             }
 
-            function resetSnapSettings() {
-                camera.resetCamSettings(false, function() {
-                    populateCamSettings(true, document.getElementById("snap_defaults_field"));
-                });
+            function hideVideoSettings() {
+                hideElementID("vid_settings_div");
             }
 
+            function showSnapSettings() {
+                showFlexElementID("snap_settings_div");
+                populateSnapSettings();
+            }
+
+            function hideSnapSettings() {
+                hideElementID("snap_settings_div");
+            }
+
+            /*
             function populateCamSettings(isVideo, field) {
                 camera.getCamSettings(isVideo, function(req, json) {
                     field.value = JSON.stringify(json);
                 });
             }
+            */
 
             function resetPiCamConfig() {
                 camera.resetSystemSettings(function () {
@@ -150,14 +158,102 @@
                 camera.applySystemSettings(text.value);
             }
 
+            function resetVidSettings() {
+                camera.resetCamSettings(true, function() {
+                    populateVidSettings();
+                });
+            }
+
+            function populateVidSettings() {
+                camera.getCamSettings(true, function(req, json) {
+                    document.getElementById("camera_setting_mode").value = json.settings.md;
+                    document.getElementById("camera_setting_width").value = json.settings.w;
+                    document.getElementById("camera_setting_height").value = json.settings.h;
+                    document.getElementById("camera_setting_fps").value = json.settings.fps;
+                    document.getElementById("camera_setting_bitrate").value = json.settings.b;
+                    document.getElementById("camera_setting_qp").value = json.settings.qp;
+                    document.getElementById("camera_setting_refresh").value = json.settings.g;
+                    document.getElementById("camera_setting_pf").value = json.settings.pf;
+                    document.getElementById("camera_setting_lev").value = json.settings.lev;
+                    document.getElementById("camera_setting_ih").checked = json.settings.ih;
+                    document.getElementById("camera_setting_fl").checked = json.settings.fl;
+                    document.getElementById("camera_setting_vs").checked = json.settings.vs;
+                    document.getElementById("camera_setting_awb").value = json.settings.awb;
+                    document.getElementById("camera_setting_drc").value = json.settings.drc;
+                    document.getElementById("camera_setting_ex").value = json.settings.ex;
+                    document.getElementById("camera_setting_rot").value = json.settings.rot;
+                });
+            }
+
+            function applyVidSettings(callback = function() {}) {
+                let settings = {
+                    md: document.getElementById("camera_setting_mode").value,
+                    w: document.getElementById("camera_setting_width").value,
+                    h: document.getElementById("camera_setting_height").value,
+                    fps: document.getElementById("camera_setting_fps").value,
+                    b: document.getElementById("camera_setting_bitrate").value,
+                    qp: document.getElementById("camera_setting_qp").value,
+                    g: document.getElementById("camera_setting_refresh").value,
+                    pf: document.getElementById("camera_setting_pf").value,
+                    lev: document.getElementById("camera_setting_lev").value,
+                    ih: document.getElementById("camera_setting_ih").checked,
+                    fl: document.getElementById("camera_setting_fl").checked,
+                    vs: document.getElementById("camera_setting_vs").checked,
+                    awb: document.getElementById("camera_setting_awb").value,
+                    drc: document.getElementById("camera_setting_drc").value,
+                    ex: document.getElementById("camera_setting_ex").value,
+                    rot: document.getElementById("camera_setting_rot").value
+                };
+                camera.applyCamSettings(true, JSON.stringify(settings), callback);
+            }
+
             function saveVidSettings() {
-                let field = document.getElementById("vid_defaults_field");
-                camera.applyCamSettings(true, field.value);
+                applyVidSettings(function() {
+                    camera.saveCamSettings(true);
+                });
+            }
+
+            function resetSnapSettings() {
+                camera.resetCamSettings(false, function() {
+                    populateSnapSettings();
+                });
+            }
+
+            function populateSnapSettings() {
+                camera.getCamSettings(false, function(req, json) {
+                    document.getElementById("snap_setting_mode").value = json.settings.md;
+                    document.getElementById("snap_setting_width").value = json.settings.w;
+                    document.getElementById("snap_setting_height").value = json.settings.h;
+                    document.getElementById("snap_setting_vs").checked = json.settings.vs;
+                    document.getElementById("snap_setting_awb").value = json.settings.awb;
+                    document.getElementById("snap_setting_drc").value = json.settings.drc;
+                    document.getElementById("snap_setting_ex").value = json.settings.ex;
+                    document.getElementById("snap_setting_rot").value = json.settings.rot;
+                    document.getElementById("snap_setting_q").value = json.settings.q;
+                    document.getElementById("snap_setting_fb").checked = json.settings.bm;
+                });
+            }
+
+            function applySnapSettings(callback = function() {}) {
+                let settings = {
+                    md: document.getElementById("snap_setting_mode").value,
+                    w: document.getElementById("snap_setting_width").value,
+                    h: document.getElementById("snap_setting_height").value,
+                    vs: document.getElementById("snap_setting_vs").checked,
+                    awb: document.getElementById("snap_setting_awb").value,
+                    drc: document.getElementById("snap_setting_drc").value,
+                    ex: document.getElementById("snap_setting_ex").value,
+                    rot: document.getElementById("snap_setting_rot").value,
+                    q: document.getElementById("snap_setting_q").value,
+                    bm: document.getElementById("snap_setting_fb").checked,
+                };
+                camera.applyCamSettings(false, JSON.stringify(settings), callback);
             }
 
             function saveSnapSettings() {
-                let field = document.getElementById("snap_defaults_field");
-                camera.applyCamSettings(false, field.value);
+                applySnapSettings(function() {
+                    camera.saveCamSettings(false);
+                });
             }
         </script>
 
@@ -197,7 +293,7 @@
                 </div>
                 <!-- Record a snapshot-->
                 <div class="grid_item">
-                    <input type="button" value="Snapshot" onclick="showSnapshot()">
+                    <input type="button" value="Snapshot" onclick="showTakeSnapshot()">
                 </div>
             </div>
 
@@ -273,7 +369,7 @@
                         <input type="button" value="Save" onclick="takeSnapshot()">
                     </div>
                     <div class="grid_item">
-                        <input type="button" value="Cancel" onclick="hideSnapSettings()">
+                        <input type="button" value="Cancel" onclick="hideTakeSnap()">
                     </div>
                 </div>
                 <!-- inner row with filename -->
@@ -344,6 +440,382 @@
                 </div>
             </div>
 
+            <!-- row with camera settings buttons -->
+            <div class="grid_row">
+                <div class="grid_item_long">
+                    Settings:
+                </div>
+                <div class="grid_item">
+                    <input type="button" value="Video" onclick="showVideoSettings()">
+                </div>
+                <div class="grid_item">
+                    <input type="button" value="Snapshot" onclick="showSnapSettings()">
+                </div>
+            </div>
+
+            <!-- hidden gridrow with video settings -->
+            <div class="inner_grid_main" id="vid_settings_div" style="display: none">
+                <!-- Title row -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_title">
+                        Video settings:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Reset" onclick="resetVidSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Apply" onclick="applyVidSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Save" onclick="saveVidSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="hideVideoSettings()">
+                    </div>
+                </div>
+                <!-- Camera mode setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Camera mode:
+                    </div>
+                    <div class="grid_item">
+                        <select id="camera_setting_mode">
+                            <option value="0">Auto</option>
+                            <option value="1">1920x1080 (30FPS max)</option>
+                            <option value="2">2592x1944 (15FPS max)</option>
+                            <option value="3">2592x1944 (1FPS max)</option>
+                            <option value="4">1296x972 (42FPS max)</option>
+                            <option value="5">1296x730 (49FPS max)</option>
+                            <option value="6">640x480 (60FPS max)</option>
+                            <option value="7">640x480 (90FPS max)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera dimensions settings -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Video dimensions:
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="5" id="camera_setting_width"/>
+                    </div>
+                    <div class="grid_item">
+                        x
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="5" id="camera_setting_height"/>
+                    </div>
+                </div>
+                <!-- Camera FPS setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Framerate (FPS):
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="4" id="camera_setting_fps"/>
+                    </div>
+                </div>
+                <!-- Camera bitrate setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Bitrate (0 is VBR):
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="10" id="camera_setting_bitrate"/>
+                    </div>
+                </div>
+                <!-- Camera QP setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Quaternization Parameter:
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="10" id="camera_setting_qp"/>
+                    </div>
+                </div>
+                <!-- Camera refresh setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Intra-refresh period:
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="10" id="camera_setting_refresh"/>
+                    </div>
+                </div>
+                <!-- Camera profile setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        H264 Profile:
+                    </div>
+                    <div class="grid_item">
+                        <select id="camera_setting_pf">
+                            <option value="baseline">Baseline (low quality)</option>
+                            <option value="main">Main (middle quality)</option>
+                            <option value="high">High (high quality)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera level setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        H264 Level:
+                    </div>
+                    <div class="grid_item">
+                        <select id="camera_setting_lev">
+                            <option value="4">4 (simple file)</option>
+                            <option value="4.1">4.1 (normal file)</option>
+                            <option value="4.2">4.2 (complex file)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera video stabilisation setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Video Stabilization:
+                    </div>
+                    <div class="grid_item">
+                        <input type="checkbox" id="camera_setting_vs" value="">
+                    </div>
+                </div>
+                <!-- Camera awb setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Automatic White Balance:
+                    </div>
+                    <div class="grid_item">
+                        <select id="camera_setting_awb">
+                            <option value="off">Off</option>
+                            <option value="auto">Automatic</option>
+                            <option value="sun">Sun</option>
+                            <option value="cloud">Cloud</option>
+                            <option value="shade">Shade</option>
+                            <option value="tungsten">Tungsten</option>
+                            <option value="florescent">Florescent</option>
+                            <option value="incandescent">Incandescent</option>
+                            <option value="flash">Flash</option>
+                            <option value="horizon">Horizon</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera drc setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Dynamic Range Compression:
+                    </div>
+                    <div class="grid_item">
+                        <select id="camera_setting_drc">
+                            <option value="off">Off</option>
+                            <option value="low">Low</option>
+                            <option value="med">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera exposure setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Exposure mode:
+                    </div>
+                    <div class="grid_item">
+                        <select id="camera_setting_ex">
+                            <option value="auto">Automatic</option>
+                            <option value="night">Night</option>
+                            <option value="backlight">Backlight</option>
+                            <option value="spotlight">Spotlight</option>
+                            <option value="sports">Sports</option>
+                            <option value="snow">Snow</option>
+                            <option value="beach">Beach</option>
+                            <option value="verylong">Long shutter</option>
+                            <option value="fixedfps">Fixed FPS</option>
+                            <option value="antishake">Anti-shake</option>
+                            <option value="firewroks">Fireworks</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera rotation setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Rotation:
+                    </div>
+                    <div class="grid_item">
+                        <select id="camera_setting_rot">
+                            <option value="0">0</option>
+                            <option value="90">90</option>
+                            <option value="180">180</option>
+                            <option value="270">270</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera inline headers setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Inline headers:
+                    </div>
+                    <div class="grid_item">
+                        <input type="checkbox" id="camera_setting_ih" value="">
+                    </div>
+                </div>
+                <!-- Camera flush buffers setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Flush Buffers:
+                    </div>
+                    <div class="grid_item">
+                        <input type="checkbox" id="camera_setting_fl" value="">
+                    </div>
+                </div>
+            </div>
+            <!-- hidden gridrow with snapshot settings -->
+            <div class="inner_grid_main" id="snap_settings_div" style="display: none">
+                <!-- Title row -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_title">
+                        Snapshot settings:
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Reset" onclick="resetSnapSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Apply" onclick="applySnapSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Save" onclick="saveSnapSettings()">
+                    </div>
+                    <div class="grid_item">
+                        <input type="button" value="Close" onclick="hideSnapSettings()">
+                    </div>
+                </div>
+                <!-- Camera mode setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Camera mode:
+                    </div>
+                    <div class="grid_item">
+                        <select id="snap_setting_mode">
+                            <option value="0">Auto</option>
+                            <option value="1">1920x1080 (30FPS max)</option>
+                            <option value="2">2592x1944 (15FPS max)</option>
+                            <option value="3">2592x1944 (1FPS max)</option>
+                            <option value="4">1296x972 (42FPS max)</option>
+                            <option value="5">1296x730 (49FPS max)</option>
+                            <option value="6">640x480 (60FPS max)</option>
+                            <option value="7">640x480 (90FPS max)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera dimensions settings -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Picture dimensions:
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="5" id="snap_setting_width"/>
+                    </div>
+                    <div class="grid_item">
+                        x
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="5" id="snap_setting_height"/>
+                    </div>
+                </div>
+                <!-- Camera video stabilisation setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Video Stabilization:
+                    </div>
+                    <div class="grid_item">
+                        <input type="checkbox" id="snap_setting_vs" value="">
+                    </div>
+                </div>
+                <!-- Camera awb setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Automatic White Balance:
+                    </div>
+                    <div class="grid_item">
+                        <select id="snap_setting_awb">
+                            <option value="off">Off</option>
+                            <option value="auto">Automatic</option>
+                            <option value="sun">Sun</option>
+                            <option value="cloud">Cloud</option>
+                            <option value="shade">Shade</option>
+                            <option value="tungsten">Tungsten</option>
+                            <option value="florescent">Florescent</option>
+                            <option value="incandescent">Incandescent</option>
+                            <option value="flash">Flash</option>
+                            <option value="horizon">Horizon</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera drc setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Dynamic Range Compression:
+                    </div>
+                    <div class="grid_item">
+                        <select id="snap_setting_drc">
+                            <option value="off">Off</option>
+                            <option value="low">Low</option>
+                            <option value="med">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera exposure setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Exposure mode:
+                    </div>
+                    <div class="grid_item">
+                        <select id="snap_setting_ex">
+                            <option value="auto">Automatic</option>
+                            <option value="night">Night</option>
+                            <option value="backlight">Backlight</option>
+                            <option value="spotlight">Spotlight</option>
+                            <option value="sports">Sports</option>
+                            <option value="snow">Snow</option>
+                            <option value="beach">Beach</option>
+                            <option value="verylong">Long shutter</option>
+                            <option value="fixedfps">Fixed FPS</option>
+                            <option value="antishake">Anti-shake</option>
+                            <option value="firewroks">Fireworks</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera rotation setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Rotation:
+                    </div>
+                    <div class="grid_item">
+                        <select id="snap_setting_rot">
+                            <option value="0">0</option>
+                            <option value="90">90</option>
+                            <option value="180">180</option>
+                            <option value="270">270</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Camera quality settings -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        JPEG Quality:
+                    </div>
+                    <div class="grid_item">
+                        <input pattern="\d*" size="3" id="snap_setting_q"/>
+                    </div>
+                </div>
+                <!-- Camera frameburst setting -->
+                <div class="inner_grid_row">
+                    <div class="grid_item_long">
+                        Frameburst mode:
+                    </div>
+                    <div class="grid_item">
+                        <input type="checkbox" id="snap_setting_fb" value="">
+                    </div>
+                </div>
+            </div>
+
             <!-- system functions -->
             <div class="grid_row">
                 <div class="grid_item_long">
@@ -374,38 +846,6 @@
                         <input type="button" value="Close" onclick="hideSettings()">
                     </div>
                 </div>
-                <!-- video settings -->
-                <div class="inner_grid_row">
-                    <div class="grid_item_long">
-                        Video defaults:
-                    </div>
-                    <div class="grid_item">
-                        <input type="text" id="vid_defaults_field" value="">
-                    </div>
-                    <div class="grid_item">
-                        <input type="button" value="Save" onclick="saveVidSettings()">
-                    </div>
-                    <div class="grid_item">
-                        <input type="button" value="Reset" onclick="resetVidSettings()">
-                    </div>
-                </div>
-                <!-- picture defaults -->
-                <div class="inner_grid_row">
-                    <div class="grid_item_long">
-                        Snapshot defaults:
-                    </div>
-                    <div class="grid_item">
-                        <input type="text" id="snap_defaults_field" value="">
-                    </div>
-                    <div class="grid_item">
-                        <input type="button" value="Save" onclick="saveSnapSettings()">
-                    </div>
-                    <div class="grid_item">
-                        <input type="button" value="Reset" onclick="resetSnapSettings()">
-                    </div>
-                </div>
-                <!-- Empty divider row -->
-                <div class="inner_grid_row"></div>
                 <!-- Config header -->
                 <div class="inner_grid_row">
                     <div class="grid_item_title">

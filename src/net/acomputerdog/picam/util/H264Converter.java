@@ -32,7 +32,8 @@ public class H264Converter extends InputStream {
         mp4box = builder.start();
         long time = 0;
         long fileLength = vidFile.length();
-        long timeout = fileLength == 0 ? 2000 : (fileLength / 10240);
+        // 1 MB = 1 second, but has to be at least 2 seconds
+        long timeout = Math.max(fileLength / 1024, 2000);
         while (!tmpFile.exists()) {
             try {
                 Thread.sleep(1);
