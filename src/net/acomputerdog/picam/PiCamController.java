@@ -6,6 +6,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import net.acomputerdog.picam.camera.Camera;
+import net.acomputerdog.picam.camera.setting.PicSettings;
+import net.acomputerdog.picam.camera.setting.VidSettings;
 import net.acomputerdog.picam.config.PiConfig;
 import net.acomputerdog.picam.gpio.GpioManager;
 import net.acomputerdog.picam.system.FileSystem;
@@ -35,8 +37,13 @@ public class PiCamController {
     private File picDir;
     private File streamDir;
     private File tmpDir;
+    private File vidSettingsFile;
+    private File picSettingsFile;
 
     private GpioManager gpio;
+
+    private VidSettings vidSettings;
+    private PicSettings picSettings;
 
     private PiCamController(String configPath) {
         try {
@@ -123,6 +130,22 @@ public class PiCamController {
                 this.webServer = new WebServer(this);
             }
 
+            vidSettingsFile = new File(baseDir, "video.settings");
+            if (vidSettingsFile.exists()) {
+                vidSettings = gson.fromJson(new FileReader(vidSettingsFile), VidSettings.class);
+            } else {
+                vidSettings = new VidSettings();
+                saveVideoConfig();
+            }
+
+            picSettingsFile = new File(baseDir, "snapshot.settings");
+            if (picSettingsFile.exists()) {
+                picSettings = gson.fromJson(new FileReader(picSettingsFile), PicSettings.class);
+            } else {
+                picSettings = new PicSettings();
+                savePicConfig();
+            }
+
             if (cameras != null) {
                 for (Camera camera : cameras) {
                     if (camera.isRecording()) {
@@ -144,6 +167,18 @@ public class PiCamController {
     public void saveConfig() throws IOException {
         try (Writer writer = new FileWriter(cfgFile)) {
             gson.toJson(config, writer);
+        }
+    }
+
+    public void saveVideoConfig() throws IOException {
+        try (Writer writer = new FileWriter(vidSettingsFile)) {
+            gson.toJson(vidSettings, writer);
+        }
+    }
+
+    public void savePicConfig() throws IOException {
+        try (Writer writer = new FileWriter(picSettingsFile)) {
+            gson.toJson(picSettings, writer);
         }
     }
 
@@ -169,11 +204,6 @@ public class PiCamController {
         readConfig();
     }
 
-    public void updateConfig(String json) {
-        config = gson.fromJson(json, PiConfig.class);
-        readConfig();
-    }
-
     public void clearCache() throws IOException {
         File[] tmpContents = getTmpDir().listFiles();
         if (tmpContents != null && tmpContents.length > 0) {
@@ -192,6 +222,16 @@ public class PiCamController {
                 }
             }
         }
+    }
+
+
+
+    public void resetVidSettings() {
+        vidSettings = new VidSettings();
+    }
+
+    public void resetPicSettings() {
+        picSettings = new PicSettings();
     }
 
     public Camera getCamera(int num) {
@@ -240,6 +280,14 @@ public class PiCamController {
 
     public Gson getGson() {
         return gson;
+    }
+
+    public VidSettings getVidSettings() {
+        return vidSettings;
+    }
+
+    public PicSettings getPicSettings() {
+        return picSettings;
     }
 
     public static void main(String[] args) {

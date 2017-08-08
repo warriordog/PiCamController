@@ -30,7 +30,7 @@ public class SnapRecorder implements Recorder {
         cmd.add("1");
         cmd.add("-n");
 
-        camera.getPicSettings().addToCommandLine(cmd);
+        camera.getController().getPicSettings().addToCommandLine(cmd);
 
         //printList(command);
 

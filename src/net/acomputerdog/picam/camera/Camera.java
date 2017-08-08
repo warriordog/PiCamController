@@ -3,8 +3,6 @@ package net.acomputerdog.picam.camera;
 import net.acomputerdog.picam.PiCamController;
 import net.acomputerdog.picam.camera.recorder.SnapRecorder;
 import net.acomputerdog.picam.camera.recorder.VideoRecorder;
-import net.acomputerdog.picam.camera.setting.PicSettings;
-import net.acomputerdog.picam.camera.setting.VidSettings;
 import net.acomputerdog.picam.file.H264File;
 import net.acomputerdog.picam.file.JPGFile;
 
@@ -18,9 +16,6 @@ public class Camera {
     private final VideoRecorder videoRecorder;
     private final SnapRecorder snapRecorder;
 
-    private VidSettings vidSettings;
-    private PicSettings picSettings;
-
     private long recordStart = 0;
 
     private File lastSnapshot;
@@ -28,8 +23,6 @@ public class Camera {
     public Camera(PiCamController controller, int cameraNumber) {
         this.controller = controller;
         this.cameraNumber = cameraNumber;
-        this.vidSettings = new VidSettings();
-        this.picSettings = new PicSettings();
         this.videoRecorder = new VideoRecorder(this);
         this.snapRecorder = new SnapRecorder(this);
     }
@@ -74,14 +67,6 @@ public class Camera {
         return recordPath;
     }
 
-    public VidSettings getVidSettings() {
-        return vidSettings;
-    }
-
-    public PicSettings getPicSettings() {
-        return picSettings;
-    }
-
     public void takeSnapshot(JPGFile file) throws IOException {
         if (isRecording()) {
             throw new IllegalStateException("Already recording.");
@@ -102,11 +87,7 @@ public class Camera {
         return lastSnapshot != null && !snapRecorder.isRecording();
     }
 
-    public void resetVidSettings() {
-        vidSettings = new VidSettings();
-    }
-
-    public void resetPicSettings() {
-        picSettings = new PicSettings();
+    public PiCamController getController() {
+        return controller;
     }
 }

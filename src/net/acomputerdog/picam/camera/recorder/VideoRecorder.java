@@ -37,7 +37,7 @@ public class VideoRecorder implements Recorder {
             cmd.add("-t");
             cmd.add(String.valueOf(time));
             cmd.add("-n");
-            camera.getVidSettings().addToCommandLine(cmd);
+            camera.getController().getVidSettings().addToCommandLine(cmd);
 
             System.out.printf("Command line: '%s'\n", toString(cmd));
 

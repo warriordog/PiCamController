@@ -332,7 +332,7 @@ public class WebServer {
         server.createContext("/func/settings/camera/get", new JsonWebHandler((h, e, json) -> {
             JsonObject response = new JsonObject();
 
-            Settings settings = getJsonField(json, "is_video").getAsBoolean() ? controller.getCamera(0).getVidSettings() : controller.getCamera(0).getPicSettings();
+            Settings settings = getJsonField(json, "is_video").getAsBoolean() ? controller.getVidSettings() : controller.getPicSettings();
             response.add("settings", controller.getGson().toJsonTree(settings));
 
             h.sendOKJson(response, e);
@@ -341,18 +341,26 @@ public class WebServer {
             String contents = getJsonField(json, "settings").getAsString();
             if (getJsonField(json, "is_video").getAsBoolean()) {
                 VidSettings settings = controller.getGson().fromJson(contents, VidSettings.class);
-                controller.getCamera(0).getVidSettings().mixIn(settings);
+                controller.getVidSettings().mixIn(settings);
             } else {
                 PicSettings settings = controller.getGson().fromJson(contents, PicSettings.class);
-                controller.getCamera(0).getPicSettings().mixIn(settings);
+                controller.getPicSettings().mixIn(settings);
             }
             h.sendSimpleResponse("200 OK", 200, e);
         }));
         server.createContext("/func/settings/camera/reset", new JsonWebHandler((h, e, json) -> {
             if (getJsonField(json, "is_video").getAsBoolean()) {
-                controller.getCamera(0).resetVidSettings();
+                controller.resetVidSettings();
             } else {
-                controller.getCamera(0).resetPicSettings();
+                controller.resetPicSettings();
+            }
+            h.sendSimpleResponse("200 OK", 200, e);
+        }));
+        server.createContext("/func/settings/camera/save", new JsonWebHandler((h, e, json) -> {
+            if (getJsonField(json, "is_video").getAsBoolean()) {
+                controller.saveVideoConfig();
+            } else {
+                controller.savePicConfig();
             }
             h.sendSimpleResponse("200 OK", 200, e);
         }));

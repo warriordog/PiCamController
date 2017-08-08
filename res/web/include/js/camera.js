@@ -199,6 +199,13 @@ const camera = {
         };
         this._sendPOST("/func/settings/camera/get", json, successCallback, failureCallback, errorCallback);
     },
+    // save camera settings
+    saveCamSettings : function(isVideo, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
+        let json = {
+            is_video: isVideo
+        };
+        this._sendPOST("/func/settings/camera/save", json, successCallback, failureCallback, errorCallback);
+    },
 
     getFileList : function(isVideo, successCallback = this._defaultSuccessCallback, failureCallback = this._defaultFailureCallback, errorCallback = this._defaultErrorCallback){
         let json = {
